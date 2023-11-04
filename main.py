@@ -13,7 +13,16 @@ EXCEL_MONTH_ROW = 2
 EXCEL_WEEKNUMBER_ROW = 3
 EXCEL_DATE_ROW = 4
 EXCEL_WEEK_DATE_ROW = 5
+
+EXCEL_FIRST_EMPLOYEE_ROW = 6
+EXCEL_LAST_EMPLOYEE_ROW = 123
+
 PASSWORD = '12345'
+
+def date_to_column_letter(start_column_letter, start_date, a_date):
+    diff = date_utils.count_dates_between_inclusive(start_date, a_date)
+    column_index = openpyxl.utils.column_index_from_string(start_column_letter) + diff -1
+    return get_column_letter(column_index)
 
 # source_wb, 
 # destination_wb, 
@@ -32,7 +41,7 @@ def clone_a_sheet(source_wb, destination_wb, new_sheet_name):
     # Save the updated Excel workbook
     workbook.save(destination_wb)
 
-def set_start_date(workbook_path, sheet_name, start_date):
+def set_start_date(workbook_path, sheet_name, start_column_letter, start_date):
     # Load the Excel workbook
     wb = openpyxl.load_workbook(workbook_path)
 
@@ -40,7 +49,7 @@ def set_start_date(workbook_path, sheet_name, start_date):
     ws = wb[sheet_name]
 
     # Create a new sheet to clone into
-    ws['E4'].value = start_date
+    ws[f'{start_column_letter}{EXCEL_DATE_ROW}'].value = start_date
 
     # Save the updated Excel workbook
     wb.save(workbook_path)
@@ -107,7 +116,7 @@ def colourize_and_lock_weekend(workbook_path, sheet_name, source_column_letter, 
         current_date = date_utils.date_add(input_date_obj=start_date, days=i)
         if date_utils.is_Weekend(current_date):
             # Lock cells and fill them with GREY
-            for row in range(4, 124):
+            for row in range(EXCEL_DATE_ROW, EXCEL_LAST_EMPLOYEE_ROW + 1):
                 cell = worksheet.cell(row=row, column=start_column_index + i)
                 cell.fill = grey_fill
                 cell.protection = openpyxl.styles.protection.Protection(locked=True)
@@ -129,14 +138,10 @@ def write_months_as_headers(workbook_path, sheet_name, source_column_letter, sta
     for (month_start, month_end) in monthly_ranges:
         if month_start and month_end:
             # Caculate the month_start column index
-            start_date_diff = date_utils.count_dates_between_inclusive(start_date, month_start)
-            month_start_column_index = start_column_index + start_date_diff - 1
-            month_start_column_letter = get_column_letter(month_start_column_index)
+            month_start_column_letter = date_to_column_letter(source_column_letter, start_date, month_start)
 
             # Caculate the month_end column index
-            end_date_diff = date_utils.count_dates_between_inclusive(start_date, month_end)
-            month_end_column_index = start_column_index + end_date_diff - 1
-            month_end_column_letter = get_column_letter(month_end_column_index)
+            month_end_column_letter = date_to_column_letter(source_column_letter, start_date, month_end)
 
             # Merge a range of cells to form a month
             merge_range = f"{month_start_column_letter}{EXCEL_MONTH_ROW}:{month_end_column_letter}{EXCEL_MONTH_ROW}"
@@ -171,19 +176,12 @@ def write_weeks_as_headers(workbook_path, sheet_name, source_column_letter, star
 
     for (week_number, (week_start, week_end)) in week_ranges:
         # Caculate the week_start column index
-        diff = date_utils.count_dates_between_inclusive(start_date, week_start)
-        week_start_column_index = start_column_index + diff - 1
-        week_start_column_letter = get_column_letter(week_start_column_index)
-
+        week_start_column_letter = date_to_column_letter(source_column_letter, start_date, week_start)
         # Caculate the week_end column index
-        diff = date_utils.count_dates_between_inclusive(start_date, week_end)
-        week_end_column_index = start_column_index + diff - 1
-        week_end_column_letter = get_column_letter(week_end_column_index)
+        week_end_column_letter = date_to_column_letter(source_column_letter, start_date, week_end)
 
         # Merge a range of cells to form a month
         merge_range = f"{week_start_column_letter}{EXCEL_WEEKNUMBER_ROW}:{week_end_column_letter}{EXCEL_WEEKNUMBER_ROW}"
-        #print("merge_range start {} end {}".format(week_start_column_letter, week_end_column_letter))
-        #print(merge_range)
         worksheet.merge_cells(merge_range)
         # Get the merged cell
         merged_cell = worksheet[f"{week_start_column_letter}{EXCEL_WEEKNUMBER_ROW}"]
@@ -233,7 +231,7 @@ def create_vaccation_period(source_wb, destination_wb, sheet_name, start_date, e
     # Clone the Template-sheet to a new sheet 
     clone_a_sheet(source_wb, destination_wb, sheet_name)
     # On the new workbook, let set the start_date at E4 
-    set_start_date(destination_wb, sheet_name, start_date)
+    set_start_date(destination_wb, sheet_name, start_column_letter, start_date)
 
     date_count = date_utils.count_dates_between_inclusive(start_date, end_date)
     #print(f"There are {date_count} inclusive dates between {start_date} and {end_date}.")
@@ -244,7 +242,12 @@ def create_vaccation_period(source_wb, destination_wb, sheet_name, start_date, e
     write_months_as_headers(destination_wb,sheet_name, start_column_letter,start_date,end_date)
     write_weeks_as_headers(destination_wb,sheet_name, start_column_letter,start_date,end_date)
     
-    apply_conditional_formatting(destination_wb, sheet_name, 'E6:DU123')
+    # Caculate range_format
+    end_column_index = openpyxl.utils.column_index_from_string(start_column_letter) + date_count -1
+    end_column_letter = get_column_letter(end_column_index)
+
+    apply_conditional_formatting(destination_wb, sheet_name, 
+                                 f'{start_column_letter}{EXCEL_FIRST_EMPLOYEE_ROW}:{end_column_letter}{EXCEL_LAST_EMPLOYEE_ROW}')
 
     # Lock the worksheet
     workbook = openpyxl.load_workbook(destination_wb)

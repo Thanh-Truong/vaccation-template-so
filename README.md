@@ -30,3 +30,6 @@ $ pip install --upgrade pip build twine
 ````
 then following the instruction here to upload the built package to PyPI or TestPyPI
 https://thanh-truong.github.io/posts/2021/06/package-your-python-code/
+
+pip install openpyxl
+pip install holidays
