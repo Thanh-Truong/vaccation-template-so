@@ -267,7 +267,7 @@ def main():
                              start_date=date(2024,1,1), end_date=date(2024,4,30))
     create_vaccation_period(source_wb=destination_wb, destination_wb=destination_wb, sheet_name="Test-May-August",
                              start_date=date(2024,5,1), end_date=date(2024,8,31))
-    create_vaccation_period(source_wb=destination_wb, destination_wb=destination_wb, sheet_name="Test-May-August",
+    create_vaccation_period(source_wb=destination_wb, destination_wb=destination_wb, sheet_name="Test-September-December",
                              start_date=date(2024,9,1), end_date=date(2024,12,31))
 
 
