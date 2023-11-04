@@ -6,7 +6,7 @@ from openpyxl.formatting.rule import CellIsRule
 
 
 from copy import copy
-import utils
+import date_utils
 from datetime import date
 
 EXCEL_MONTH_ROW = 2
@@ -104,8 +104,8 @@ def colourize_and_lock_weekend(workbook_path, sheet_name, source_column_letter, 
     grey_fill = PatternFill(start_color="808080", end_color="808080", fill_type="solid")
 
     for i in range(0, date_count):
-        current_date = utils.date_add(input_date_obj=start_date, days=i)
-        if utils.is_Weekend(current_date):
+        current_date = date_utils.date_add(input_date_obj=start_date, days=i)
+        if date_utils.is_Weekend(current_date):
             # Lock cells and fill them with GREY
             for row in range(4, 124):
                 cell = worksheet.cell(row=row, column=start_column_index + i)
@@ -124,17 +124,17 @@ def write_months_as_headers(workbook_path, sheet_name, source_column_letter, sta
     
     # Get the index of the starting column
     start_column_index = openpyxl.utils.column_index_from_string(source_column_letter)
-    monthly_ranges = utils.generate_monthly_ranges_within_year(start_date, end_date)    
+    monthly_ranges = date_utils.generate_monthly_ranges_within_year(start_date, end_date)    
     month = 0
     for (month_start, month_end) in monthly_ranges:
         if month_start and month_end:
             # Caculate the month_start column index
-            start_date_diff = utils.count_dates_between_inclusive(start_date, month_start)
+            start_date_diff = date_utils.count_dates_between_inclusive(start_date, month_start)
             month_start_column_index = start_column_index + start_date_diff - 1
             month_start_column_letter = get_column_letter(month_start_column_index)
 
             # Caculate the month_end column index
-            end_date_diff = utils.count_dates_between_inclusive(start_date, month_end)
+            end_date_diff = date_utils.count_dates_between_inclusive(start_date, month_end)
             month_end_column_index = start_column_index + end_date_diff - 1
             month_end_column_letter = get_column_letter(month_end_column_index)
 
@@ -147,9 +147,9 @@ def write_months_as_headers(workbook_path, sheet_name, source_column_letter, sta
             # Get the merged cell
             merged_cell = worksheet[f"{month_start_column_letter}{EXCEL_MONTH_ROW}"]
             # Set the month as string in the merged cells
-            merged_cell.value = utils.MONTHS_OF_A_YEAR[month]
+            merged_cell.value = date_utils.MONTHS_OF_A_YEAR[month]
             # Colourize the month
-            color_to_fill = utils.MONTHS_COLORS[month]
+            color_to_fill = date_utils.MONTHS_COLORS[month]
 
             merged_cell.fill = color_to_fill
 
@@ -167,16 +167,16 @@ def write_weeks_as_headers(workbook_path, sheet_name, source_column_letter, star
     
     # Get the index of the starting column
     start_column_index = openpyxl.utils.column_index_from_string(source_column_letter)
-    week_ranges = utils.week_ranges_in_range(start_date, end_date)
+    week_ranges = date_utils.week_ranges_in_range(start_date, end_date)
 
     for (week_number, (week_start, week_end)) in week_ranges:
         # Caculate the week_start column index
-        diff = utils.count_dates_between_inclusive(start_date, week_start)
+        diff = date_utils.count_dates_between_inclusive(start_date, week_start)
         week_start_column_index = start_column_index + diff - 1
         week_start_column_letter = get_column_letter(week_start_column_index)
 
         # Caculate the week_end column index
-        diff = utils.count_dates_between_inclusive(start_date, week_end)
+        diff = date_utils.count_dates_between_inclusive(start_date, week_end)
         week_end_column_index = start_column_index + diff - 1
         week_end_column_letter = get_column_letter(week_end_column_index)
 
@@ -235,7 +235,7 @@ def create_vaccation_period(source_wb, destination_wb, sheet_name, start_date, e
     # On the new workbook, let set the start_date at E4 
     set_start_date(destination_wb, sheet_name, start_date)
 
-    date_count = utils.count_dates_between_inclusive(start_date, end_date)
+    date_count = date_utils.count_dates_between_inclusive(start_date, end_date)
     #print(f"There are {date_count} inclusive dates between {start_date} and {end_date}.")
 
     # Insert columns to the right with the same format as start_column_letter
