@@ -55,10 +55,15 @@ def set_start_date(workbook_path, sheet_name, start_column_letter, start_date):
     wb.save(workbook_path)
 
 
-def copy_date_formulas(destination_column, destination_column_letter, source_column_letter, date_diff):
-    # Python starts index from 0 while Excel starts from 1
+def copy_date_formulas(destination_column, destination_column_letter, source_column, source_column_letter, date_diff):
+    # Copy formulas
     destination_column[EXCEL_DATE_ROW - 1].value = "={}{}+{}".format(source_column_letter, EXCEL_DATE_ROW, date_diff)
     destination_column[EXCEL_WEEK_DATE_ROW -1].value = '=TEXT({}{},"ddd")'.format(destination_column_letter, EXCEL_DATE_ROW)
+    # Above should work but here another way to asign values instead formulas
+    destination_column[EXCEL_DATE_ROW - 1].value = date_utils.date_add(source_column[EXCEL_DATE_ROW - 1].value, days=date_diff)
+    destination_column[EXCEL_WEEK_DATE_ROW -1].value = date_utils.get_weekday_short_text(destination_column[EXCEL_DATE_ROW - 1].value)
+    
+
 
 def copy_format_column(worksheet, source_column_letter, destination_column_letter, date_diff):
     source_column = worksheet[source_column_letter]
@@ -78,7 +83,7 @@ def copy_format_column(worksheet, source_column_letter, destination_column_lette
     
     # Copy date formulas to display "day" on row 4th and "weekday" on row 5th
     copy_date_formulas(destination_column, destination_column_letter, 
-                       source_column_letter, date_diff)
+                       source_column, source_column_letter, date_diff)
 
 def insert_columns_with_format(workbook_path, sheet_name, source_column_letter, date_count):
     # Load the Excel workbook
@@ -265,12 +270,14 @@ def main():
     destination_wb='2024-vaccation.xlsx'
     create_vaccation_period(source_wb=source_wb, destination_wb=destination_wb, sheet_name="Test-January-April",
                              start_date=date(2024,1,1), end_date=date(2024,4,30))
-    create_vaccation_period(source_wb=destination_wb, destination_wb=destination_wb, sheet_name="Test-May-August",
+    """ create_vaccation_period(source_wb=destination_wb, destination_wb=destination_wb, sheet_name="Test-May-August",
                              start_date=date(2024,5,1), end_date=date(2024,8,31))
     create_vaccation_period(source_wb=destination_wb, destination_wb=destination_wb, sheet_name="Test-September-December",
-                             start_date=date(2024,9,1), end_date=date(2024,12,31))
+                             start_date=date(2024,9,1), end_date=date(2024,12,31)) """
 
 
 if __name__ == "__main__":
     main()
+    #import red_days
+    #red_days.get_swedish_holidays(2024)
     

@@ -17,6 +17,16 @@ MONTHS_OF_A_YEAR = [
     "December"
 ]
 
+WEEKDAYS = [
+    "Mon",
+    "Tue",
+    "Ons",
+    "Thur",
+    "Fri",
+    "Sat",
+    "Sun"
+]
+
 from openpyxl.styles import PatternFill
 
 # Define custom fill colors for each month
@@ -68,6 +78,9 @@ def date_add(input_date_obj, days=0, months=0, years=0):
 def get_weekday(date_obj):
     # Get the weekday as an integer (0 = Monday, 1 = Tuesday, ..., 6 = Sunday)
     return date_obj.weekday()
+
+def get_weekday_short_text(date_obj):
+    return WEEKDAYS[get_weekday(date_obj)]
 
 def is_Weekend(date_obj):
     return get_weekday(date_obj) == 5 or get_weekday(date_obj) == 6
