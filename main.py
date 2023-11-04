@@ -195,7 +195,7 @@ def write_weeks_as_headers(workbook_path, sheet_name, source_column_letter, star
 
 
 def apply_conditional_formatting(workbook_path, sheet_name, range_to_format):
-    """ # Load the Excel workbook
+    # Load the Excel workbook
     workbook = openpyxl.load_workbook(workbook_path)
 
     # Select the worksheet
@@ -203,21 +203,29 @@ def apply_conditional_formatting(workbook_path, sheet_name, range_to_format):
 
     # Green fill
     green_fill = PatternFill(start_color="00FF00", end_color="00FF00", fill_type="solid")
+    dark_green_fill = PatternFill(start_color="006400", end_color="006400", fill_type="solid")
+    yellow_fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")
+    purple_fill = PatternFill(start_color="CC99FF", end_color="CC99FF", fill_type="solid")
+    himmel_farg_fill = PatternFill(start_color="00CCFF", end_color="00CCFF", fill_type="solid")
+
 
     # Define the rule: Fill cell with green if cell value is equal to "v"
-    rule = CellIsRule(operator='equal', formula=['v'], stopIfTrue=True, fill=redFill))
-    
-        formula=['$A1="v"'],
-        stopIfTrue=False,
-        fill=PatternFill(start_color="00FF00", end_color="00FF00", fill_type="solid")
-    )
+    vaccation_rule = CellIsRule(operator='equal', formula=['"v"'], stopIfTrue=True, fill=green_fill)
+    approved_vaccation_rule = CellIsRule(operator='equal', formula=['"a"'], stopIfTrue=True, fill=dark_green_fill)
+    other_rule = CellIsRule(operator='equal', formula=['"o"'], stopIfTrue=True, fill=yellow_fill)
+    parental_rule = CellIsRule(operator='equal', formula=['"p"'], stopIfTrue=True, fill=purple_fill)
+    education_rule = CellIsRule(operator='equal', formula=['"e"'], stopIfTrue=True, fill=himmel_farg_fill)
 
     # Add the rule to the worksheet
-    worksheet.conditional_formatting.add(range_to_format, rule)
+    worksheet.conditional_formatting.add(range_to_format, vaccation_rule)
+    worksheet.conditional_formatting.add(range_to_format, approved_vaccation_rule)
+    worksheet.conditional_formatting.add(range_to_format, other_rule)
+    worksheet.conditional_formatting.add(range_to_format, parental_rule)
+    worksheet.conditional_formatting.add(range_to_format, education_rule)
 
     # Save the updated Excel workbook
-    workbook.save(workbook_path) """
-    
+    workbook.save(workbook_path)
+
 
 def create_vaccation_period(source_wb, destination_wb, sheet_name, start_date, end_date):
     start_column_letter = 'E'
