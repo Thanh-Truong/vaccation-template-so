@@ -261,14 +261,16 @@ def create_vaccation_period(source_wb, destination_wb, sheet_name, start_date, e
     workbook.save(destination_wb)
 
 def main():
-    source_wb='2023-11-03-Python.xlsx'
-    destination_wb='2023-11-03-Python_updated.xlsx'
-    sheet_name='Test'
-    start_date = date(2024,1,1)
-    end_date = date(2024,4,30)
+    source_wb='vaccation-template.xlsx'
+    destination_wb='2024-vaccation.xlsx'
     create_vaccation_period(source_wb=source_wb, destination_wb=destination_wb, sheet_name="Test-January-April",
-                             start_date=start_date, end_date=end_date)
+                             start_date=date(2024,1,1), end_date=date(2024,4,30))
+    create_vaccation_period(source_wb=destination_wb, destination_wb=destination_wb, sheet_name="Test-May-August",
+                             start_date=date(2024,5,1), end_date=date(2024,8,31))
+    create_vaccation_period(source_wb=destination_wb, destination_wb=destination_wb, sheet_name="Test-May-August",
+                             start_date=date(2024,9,1), end_date=date(2024,12,31))
+
 
 if __name__ == "__main__":
     main()
-    #test()
+    
