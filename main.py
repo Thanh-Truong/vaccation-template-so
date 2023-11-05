@@ -108,12 +108,16 @@ def insert_columns_with_format(workbook_path, sheet_name, source_column_letter, 
     # Save the updated Excel workbook
     workbook.save(workbook_path)
 
-def colourize_cells_to_last_employees(worksheet, start_column_index, day_diff, color_fill):
+def colourize_cells_to_last_employees(worksheet, start_column_index, day_diff, color_fill, locked):
     # Lock cells and fill them with GREY
     for row in range(EXCEL_DATE_ROW, EXCEL_LAST_EMPLOYEE_ROW + 1):
         cell = worksheet.cell(row=row, column=start_column_index + day_diff)
         cell.fill = color_fill
-        cell.protection = openpyxl.styles.protection.Protection(locked=True)
+        # Cells at and above EXCEL_WEEK_DATE_ROW are always protected
+        if row > EXCEL_WEEK_DATE_ROW:
+            cell.protection = openpyxl.styles.protection.Protection(locked=locked)
+        else:
+            cell.protection = openpyxl.styles.protection.Protection(locked=True)
 
 def colourize_and_lock_weekend(workbook_path, sheet_name, source_column_letter, start_date, date_count):
     # Load the Excel workbook
@@ -127,17 +131,22 @@ def colourize_and_lock_weekend(workbook_path, sheet_name, source_column_letter, 
     # Define the grey fill color
     grey_fill = PatternFill(start_color="808080", end_color="808080", fill_type="solid")
     red_fill = PatternFill(start_color="FFFF0000", end_color="FFFF0000", fill_type="solid")
-    
+
     holidays = [(date_utils.parse_date(holiday_str), holiday_description) 
                 for holiday_str, holiday_description 
                     in red_days.get_swedish_holidays(2024)]
 
     for date_diff in range(0, date_count):
         current_date = date_utils.date_add(input_date_obj=start_date, days=date_diff)
+        color_fill = PatternFill(fill_type=None)
+        locked = False
         if date_utils.is_Weekend(current_date):
-            colourize_cells_to_last_employees(worksheet, start_column_index, date_diff, grey_fill)
-        elif date_utils.is_holiday(current_date, holidays):
-            colourize_cells_to_last_employees(worksheet, start_column_index, date_diff, red_fill)
+            color_fill = grey_fill
+            locked = True
+        if date_utils.is_holiday(current_date, holidays):
+            color_fill = red_fill
+            locked = True
+        colourize_cells_to_last_employees(worksheet, start_column_index, date_diff, color_fill, locked)
 
     # Save the updated Excel workbook
     workbook.save(workbook_path)
@@ -282,7 +291,7 @@ def main():
     source_wb='vaccation-template.xlsx'
     destination_wb='2024-vaccation.xlsx'
     create_vaccation_period(source_wb=source_wb, destination_wb=destination_wb, sheet_name="Test-January-April",
-                             start_date=date(2024,1,1), end_date=date(2024,4,30))
+                             start_date=date(2024,1,1), end_date=date(2024,1,10))
     """ create_vaccation_period(source_wb=destination_wb, destination_wb=destination_wb, sheet_name="Test-May-August",
                              start_date=date(2024,5,1), end_date=date(2024,8,31))
     create_vaccation_period(source_wb=destination_wb, destination_wb=destination_wb, sheet_name="Test-September-December",
@@ -299,8 +308,8 @@ if __name__ == "__main__":
     for day, descr in holidays:
         print(day.strftime('%Y-%m-%d'))
 
-    print(date_utils.is_holiday(date(2024, 1, 1), holidays)) """
-
+    print(date_utils.is_holiday(date(2024, 1, 1), holidays))
+ """
 
     """ workbook = openpyxl.load_workbook('2024-vaccation.xlsx')
     # Select the worksheet
