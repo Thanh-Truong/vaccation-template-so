@@ -116,16 +116,17 @@ def insert_columns_with_format(workbook_path, sheet_name, source_column_letter, 
 
 def colourize_cells_to_last_employees(worksheet, start_column_index, 
                                       day_diff, color_fill, locked, comment):
-    # Lock cells and fill them with GREY
     for row in range(EXCEL_DATE_ROW, EXCEL_LAST_EMPLOYEE_ROW + 1):
         cell = worksheet.cell(row=row, column=start_column_index + day_diff)
         cell.fill = color_fill
+        if row == EXCEL_DATE_ROW:
+            cell.comment = comment
+        
         # Cells at and above EXCEL_WEEK_DATE_ROW are always protected
         if row > EXCEL_WEEK_DATE_ROW:
             cell.protection = openpyxl.styles.protection.Protection(locked=locked)
         else:
             cell.protection = openpyxl.styles.protection.Protection(locked=True)
-        cell.comment = comment
 
 def colourize_and_lock_weekend(workbook_path, sheet_name, source_column_letter, start_date, date_count):
     # Load the Excel workbook
@@ -137,7 +138,8 @@ def colourize_and_lock_weekend(workbook_path, sheet_name, source_column_letter, 
     # Get the index of the starting column
     start_column_index = openpyxl.utils.column_index_from_string(source_column_letter)
 
-    holidays = red_days.get_swedish_holidays_as_date_description(CUSTOM_YEAR)
+    heldagar = red_days.get_heldagar_as_dates(CUSTOM_YEAR)
+    kortdagar = red_days.get_kortagar_as_dates(CUSTOM_YEAR)
 
     for date_diff in range(0, date_count):
         current_date = date_utils.date_add(input_date_obj=start_date, days=date_diff)
@@ -147,15 +149,16 @@ def colourize_and_lock_weekend(workbook_path, sheet_name, source_column_letter, 
             color_fill = colors.color_of_weekend()
             locked = True
         
-        holiday_description = red_days.get_holiday_description(current_date, holidays)
+        heldag_name = red_days.get_heldag_name(current_date, heldagar)
+        kortdag_name = red_days.get_kortdag_name(current_date, kortdagar)
         comment = None
-        if holiday_description:
-            color_fill = colors.color_of_holiday()
+        if heldag_name:
+            color_fill = colors.color_of_heldag()
             locked = True
-            column_letter = date_to_column_letter(source_column_letter, start_date, current_date)
-            
-            comment = Comment(holiday_description, None)
-
+            comment = Comment(heldag_name, None)
+        if kortdag_name:
+            color_fill = colors.color_of_kortdag()
+            comment = Comment(kortdag_name, None)
         colourize_cells_to_last_employees(worksheet, start_column_index, 
                                           date_diff, color_fill, locked, comment)
 
@@ -274,23 +277,24 @@ def create_vaccation_period(source_wb, destination_wb, sheet_name, start_date, e
     apply_conditional_formatting(destination_wb, sheet_name, 
                                  f'{start_column_letter}{EXCEL_FIRST_EMPLOYEE_ROW}:{end_column_letter}{EXCEL_LAST_EMPLOYEE_ROW}')
 
-    # Lock the worksheet
     workbook = openpyxl.load_workbook(destination_wb)
-    # Select the worksheet
     worksheet = workbook[sheet_name]
     # Protect the sheet with a password
     worksheet.protection.sheet = True
     worksheet.protection.password = CUSTOM_PASSWORD
+    # Remove the template-sheet
+    #template_sheet = workbook["Template-sheet"]
+    #workbook.remove(template_sheet)
     workbook.save(destination_wb)
 
 def main():
     source_wb='vaccation-template.xlsx'
     destination_wb='2024-vaccation.xlsx'
-    create_vaccation_period(source_wb=source_wb, destination_wb=destination_wb, sheet_name="Test-January-April",
+    create_vaccation_period(source_wb=source_wb, destination_wb=destination_wb, sheet_name="January-April",
                              start_date=date(CUSTOM_YEAR,1,1), end_date=date(CUSTOM_YEAR,4,30))
-    create_vaccation_period(source_wb=destination_wb, destination_wb=destination_wb, sheet_name="Test-May-August",
+    create_vaccation_period(source_wb=destination_wb, destination_wb=destination_wb, sheet_name="May-August",
                              start_date=date(CUSTOM_YEAR,5,1), end_date=date(CUSTOM_YEAR,8,31))
-    create_vaccation_period(source_wb=destination_wb, destination_wb=destination_wb, sheet_name="Test-September-December",
+    create_vaccation_period(source_wb=destination_wb, destination_wb=destination_wb, sheet_name="September-December",
                              start_date=date(CUSTOM_YEAR,9,1), end_date=date(CUSTOM_YEAR,12,31))
 
 def create_textbox_and_connector(wb, ws):

@@ -24,9 +24,13 @@ def color_of_weekend():
     # Grey fill
     return PatternFill(start_color="808080", end_color="808080", fill_type="solid")
 
-def color_of_holiday():
+def color_of_heldag():
     # Red fill
     return PatternFill(start_color="FFFF0000", end_color="FFFF0000", fill_type="solid")
+
+def color_of_kortdag():
+    # Pink fill
+    return PatternFill(start_color="FFFF99CC", end_color="FFFF99CC", fill_type="solid")
 
 def color_of_vaccation():
    # Green fill
