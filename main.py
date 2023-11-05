@@ -6,7 +6,6 @@ from openpyxl.formatting.rule import CellIsRule
 from openpyxl.comments import Comment
 from openpyxl.worksheet.datavalidation import DataValidation
 
-
 from copy import copy
 import date_utils
 import colors
@@ -282,9 +281,10 @@ def create_vaccation_period(source_wb, destination_wb, sheet_name, start_date, e
     # Protect the sheet with a password
     worksheet.protection.sheet = True
     worksheet.protection.password = CUSTOM_PASSWORD
-    # Remove the template-sheet
-    #template_sheet = workbook["Template-sheet"]
-    #workbook.remove(template_sheet)
+    # Move up
+    workbook.move_sheet(worksheet, -2)
+    worksheet["B1"].value = f"Vaccation list {CUSTOM_YEAR}"
+    worksheet["B3"].value = f"{sheet_name}"
     workbook.save(destination_wb)
 
 def main():
@@ -296,6 +296,17 @@ def main():
                              start_date=date(CUSTOM_YEAR,5,1), end_date=date(CUSTOM_YEAR,8,31))
     create_vaccation_period(source_wb=destination_wb, destination_wb=destination_wb, sheet_name="September-December",
                              start_date=date(CUSTOM_YEAR,9,1), end_date=date(CUSTOM_YEAR,12,31))
+    
+    # Remove the template-sheet
+    workbook = openpyxl.load_workbook(destination_wb)
+    template_sheet = workbook["Template-sheet"]
+    workbook.remove(template_sheet)
+    properties = workbook.properties
+    properties.creator = "Thành Trương"  # Set your name as the author
+    properties.description = "Created by Python program written by Thành Trương - 2024"
+    
+
+    workbook.save(destination_wb)
 
 def create_textbox_and_connector(wb, ws):
   """Creates a textbox and a connector in the specified worksheet.
