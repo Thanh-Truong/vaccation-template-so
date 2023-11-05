@@ -7,7 +7,10 @@ from openpyxl.formatting.rule import CellIsRule
 
 from copy import copy
 import date_utils
+import colors
 from datetime import date
+import red_days
+
 
 EXCEL_MONTH_ROW = 2
 EXCEL_WEEKNUMBER_ROW = 3
@@ -105,6 +108,13 @@ def insert_columns_with_format(workbook_path, sheet_name, source_column_letter, 
     # Save the updated Excel workbook
     workbook.save(workbook_path)
 
+def colourize_cells_to_last_employees(worksheet, start_column_index, day_diff, color_fill):
+    # Lock cells and fill them with GREY
+    for row in range(EXCEL_DATE_ROW, EXCEL_LAST_EMPLOYEE_ROW + 1):
+        cell = worksheet.cell(row=row, column=start_column_index + day_diff)
+        cell.fill = color_fill
+        cell.protection = openpyxl.styles.protection.Protection(locked=True)
+
 def colourize_and_lock_weekend(workbook_path, sheet_name, source_column_letter, start_date, date_count):
     # Load the Excel workbook
     workbook = openpyxl.load_workbook(workbook_path)
@@ -116,16 +126,19 @@ def colourize_and_lock_weekend(workbook_path, sheet_name, source_column_letter, 
     start_column_index = openpyxl.utils.column_index_from_string(source_column_letter)
     # Define the grey fill color
     grey_fill = PatternFill(start_color="808080", end_color="808080", fill_type="solid")
-
-    for i in range(0, date_count):
-        current_date = date_utils.date_add(input_date_obj=start_date, days=i)
-        if date_utils.is_Weekend(current_date):
-            # Lock cells and fill them with GREY
-            for row in range(EXCEL_DATE_ROW, EXCEL_LAST_EMPLOYEE_ROW + 1):
-                cell = worksheet.cell(row=row, column=start_column_index + i)
-                cell.fill = grey_fill
-                cell.protection = openpyxl.styles.protection.Protection(locked=True)
+    red_fill = PatternFill(start_color="FFFF0000", end_color="FFFF0000", fill_type="solid")
     
+    holidays = [(date_utils.parse_date(holiday_str), holiday_description) 
+                for holiday_str, holiday_description 
+                    in red_days.get_swedish_holidays(2024)]
+
+    for date_diff in range(0, date_count):
+        current_date = date_utils.date_add(input_date_obj=start_date, days=date_diff)
+        if date_utils.is_Weekend(current_date):
+            colourize_cells_to_last_employees(worksheet, start_column_index, date_diff, grey_fill)
+        elif date_utils.is_holiday(current_date, holidays):
+            colourize_cells_to_last_employees(worksheet, start_column_index, date_diff, red_fill)
+
     # Save the updated Excel workbook
     workbook.save(workbook_path)
 
@@ -159,7 +172,7 @@ def write_months_as_headers(workbook_path, sheet_name, source_column_letter, sta
             # Set the month as string in the merged cells
             merged_cell.value = date_utils.MONTHS_OF_A_YEAR[month]
             # Colourize the month
-            color_to_fill = date_utils.MONTHS_COLORS[month]
+            color_to_fill = colors.MONTHS_COLORS[month]
 
             merged_cell.fill = color_to_fill
 
@@ -278,6 +291,20 @@ def main():
 
 if __name__ == "__main__":
     main()
-    #import red_days
-    #red_days.get_swedish_holidays(2024)
+    """ import red_days
+    holidays = [(date_utils.parse_date(holiday_str), holiday_description) 
+                for holiday_str, holiday_description 
+                    in red_days.get_swedish_holidays(2024)]
     
+    for day, descr in holidays:
+        print(day.strftime('%Y-%m-%d'))
+
+    print(date_utils.is_holiday(date(2024, 1, 1), holidays)) """
+
+
+    """ workbook = openpyxl.load_workbook('2024-vaccation.xlsx')
+    # Select the worksheet
+    worksheet = workbook["Test-January-April"]
+    sample_value = worksheet["E4"].value
+    print(sample_value) """
+
