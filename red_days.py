@@ -1,6 +1,7 @@
 from datetime import date
 import holidays
 import requests
+import date_utils
 
 def get_swedish_public_holidays(year):
     # Create a dictionary of Swedish holidays for the specified year
@@ -23,6 +24,17 @@ def get_swedish_holidays(year):
                             and "helgdag" in day]
         return holidays
     return []
+
+def get_swedish_holidays_as_date_description(year):
+    return [(date_utils.parse_date(holiday_str), holiday_description) 
+                for holiday_str, holiday_description 
+                    in get_swedish_holidays(year)]
+
+def get_holiday_description(date_obj, holidays):
+    for day, _ in holidays:
+        if day == date_obj:
+            return _
+    return None
 
 if __name__ == "__main__":
     # Example usage:

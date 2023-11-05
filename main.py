@@ -3,6 +3,8 @@ from openpyxl.utils import get_column_letter
 from openpyxl.styles import PatternFill
 from openpyxl.styles import Color
 from openpyxl.formatting.rule import CellIsRule
+from openpyxl.comments import Comment
+from openpyxl.worksheet.datavalidation import DataValidation
 
 
 from copy import copy
@@ -11,7 +13,7 @@ import colors
 from datetime import date
 import red_days
 
-
+################### DO NOT CHANGE!!! ##################
 EXCEL_MONTH_ROW = 2
 EXCEL_WEEKNUMBER_ROW = 3
 EXCEL_DATE_ROW = 4
@@ -19,8 +21,12 @@ EXCEL_WEEK_DATE_ROW = 5
 
 EXCEL_FIRST_EMPLOYEE_ROW = 6
 EXCEL_LAST_EMPLOYEE_ROW = 123
+######################################################
 
-PASSWORD = '12345'
+################### User preferences ###################
+CUSTOM_PASSWORD = '12345'
+CUSTOM_YEAR = 2024
+#########################################################
 
 def date_to_column_letter(start_column_letter, start_date, a_date):
     diff = date_utils.count_dates_between_inclusive(start_date, a_date)
@@ -108,7 +114,8 @@ def insert_columns_with_format(workbook_path, sheet_name, source_column_letter, 
     # Save the updated Excel workbook
     workbook.save(workbook_path)
 
-def colourize_cells_to_last_employees(worksheet, start_column_index, day_diff, color_fill, locked):
+def colourize_cells_to_last_employees(worksheet, start_column_index, 
+                                      day_diff, color_fill, locked, comment):
     # Lock cells and fill them with GREY
     for row in range(EXCEL_DATE_ROW, EXCEL_LAST_EMPLOYEE_ROW + 1):
         cell = worksheet.cell(row=row, column=start_column_index + day_diff)
@@ -118,6 +125,7 @@ def colourize_cells_to_last_employees(worksheet, start_column_index, day_diff, c
             cell.protection = openpyxl.styles.protection.Protection(locked=locked)
         else:
             cell.protection = openpyxl.styles.protection.Protection(locked=True)
+        cell.comment = comment
 
 def colourize_and_lock_weekend(workbook_path, sheet_name, source_column_letter, start_date, date_count):
     # Load the Excel workbook
@@ -129,9 +137,7 @@ def colourize_and_lock_weekend(workbook_path, sheet_name, source_column_letter, 
     # Get the index of the starting column
     start_column_index = openpyxl.utils.column_index_from_string(source_column_letter)
 
-    holidays = [(date_utils.parse_date(holiday_str), holiday_description) 
-                for holiday_str, holiday_description 
-                    in red_days.get_swedish_holidays(2024)]
+    holidays = red_days.get_swedish_holidays_as_date_description(CUSTOM_YEAR)
 
     for date_diff in range(0, date_count):
         current_date = date_utils.date_add(input_date_obj=start_date, days=date_diff)
@@ -140,10 +146,18 @@ def colourize_and_lock_weekend(workbook_path, sheet_name, source_column_letter, 
         if date_utils.is_Weekend(current_date):
             color_fill = colors.color_of_weekend()
             locked = True
-        if date_utils.is_holiday(current_date, holidays):
+        
+        holiday_description = red_days.get_holiday_description(current_date, holidays)
+        comment = None
+        if holiday_description:
             color_fill = colors.color_of_holiday()
             locked = True
-        colourize_cells_to_last_employees(worksheet, start_column_index, date_diff, color_fill, locked)
+            column_letter = date_to_column_letter(source_column_letter, start_date, current_date)
+            
+            comment = Comment(holiday_description, None)
+
+        colourize_cells_to_last_employees(worksheet, start_column_index, 
+                                          date_diff, color_fill, locked, comment)
 
     # Save the updated Excel workbook
     workbook.save(workbook_path)
@@ -266,36 +280,54 @@ def create_vaccation_period(source_wb, destination_wb, sheet_name, start_date, e
     worksheet = workbook[sheet_name]
     # Protect the sheet with a password
     worksheet.protection.sheet = True
-    worksheet.protection.password = PASSWORD
+    worksheet.protection.password = CUSTOM_PASSWORD
     workbook.save(destination_wb)
 
 def main():
     source_wb='vaccation-template.xlsx'
     destination_wb='2024-vaccation.xlsx'
     create_vaccation_period(source_wb=source_wb, destination_wb=destination_wb, sheet_name="Test-January-April",
-                             start_date=date(2024,1,1), end_date=date(2024,1,10))
-    """ create_vaccation_period(source_wb=destination_wb, destination_wb=destination_wb, sheet_name="Test-May-August",
-                             start_date=date(2024,5,1), end_date=date(2024,8,31))
+                             start_date=date(CUSTOM_YEAR,1,1), end_date=date(CUSTOM_YEAR,4,30))
+    create_vaccation_period(source_wb=destination_wb, destination_wb=destination_wb, sheet_name="Test-May-August",
+                             start_date=date(CUSTOM_YEAR,5,1), end_date=date(CUSTOM_YEAR,8,31))
     create_vaccation_period(source_wb=destination_wb, destination_wb=destination_wb, sheet_name="Test-September-December",
-                             start_date=date(2024,9,1), end_date=date(2024,12,31)) """
+                             start_date=date(CUSTOM_YEAR,9,1), end_date=date(CUSTOM_YEAR,12,31))
 
+def create_textbox_and_connector(wb, ws):
+  """Creates a textbox and a connector in the specified worksheet.
+
+  Args:
+    wb: The Excel workbook object.
+    ws: The worksheet object.
+  """
+
+  # Create a new Shape object for the textbox.
+  textbox = openpyxl.drawing.shapes.Shape()
+
+  # Set the textbox's position and size.
+  textbox.left = 10
+  textbox.top = 10
+  textbox.width = 100
+  textbox.height = 20
+
+  # Add text to the textbox.
+  textbox.text = "This is a textbox."
+
+  # Create a new Shape object for the connector.
+  connector = openpyxl.drawing.shapes.Shape()
+
+  # Set the connector's start and end points.
+  connector.start = textbox.upperLeftCorner
+  connector.end = (textbox.left + textbox.width, textbox.top + textbox.height)
+
+  # Set the connector's style.
+  connector.lineStyle = openpyxl.styles.LineFormat()
+  connector.lineStyle.color = openpyxl.styles.Color(rgb="FF0000")
+  connector.lineStyle.width = 1
+
+  # Add the connector to the textbox.
+  textbox.add_shape(connector)
 
 if __name__ == "__main__":
     main()
-    """ import red_days
-    holidays = [(date_utils.parse_date(holiday_str), holiday_description) 
-                for holiday_str, holiday_description 
-                    in red_days.get_swedish_holidays(2024)]
-    
-    for day, descr in holidays:
-        print(day.strftime('%Y-%m-%d'))
-
-    print(date_utils.is_holiday(date(2024, 1, 1), holidays))
- """
-
-    """ workbook = openpyxl.load_workbook('2024-vaccation.xlsx')
-    # Select the worksheet
-    worksheet = workbook["Test-January-April"]
-    sample_value = worksheet["E4"].value
-    print(sample_value) """
 
