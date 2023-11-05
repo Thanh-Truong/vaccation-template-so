@@ -128,9 +128,6 @@ def colourize_and_lock_weekend(workbook_path, sheet_name, source_column_letter, 
     
     # Get the index of the starting column
     start_column_index = openpyxl.utils.column_index_from_string(source_column_letter)
-    # Define the grey fill color
-    grey_fill = PatternFill(start_color="808080", end_color="808080", fill_type="solid")
-    red_fill = PatternFill(start_color="FFFF0000", end_color="FFFF0000", fill_type="solid")
 
     holidays = [(date_utils.parse_date(holiday_str), holiday_description) 
                 for holiday_str, holiday_description 
@@ -141,10 +138,10 @@ def colourize_and_lock_weekend(workbook_path, sheet_name, source_column_letter, 
         color_fill = PatternFill(fill_type=None)
         locked = False
         if date_utils.is_Weekend(current_date):
-            color_fill = grey_fill
+            color_fill = colors.color_of_weekend()
             locked = True
         if date_utils.is_holiday(current_date, holidays):
-            color_fill = red_fill
+            color_fill = colors.color_of_holiday()
             locked = True
         colourize_cells_to_last_employees(worksheet, start_column_index, date_diff, color_fill, locked)
 
@@ -191,10 +188,7 @@ def write_months_as_headers(workbook_path, sheet_name, source_column_letter, sta
     workbook.save(workbook_path)
 
 def write_weeks_as_headers(workbook_path, sheet_name, source_column_letter, start_date, end_date):
-    # Load the Excel workbook
     workbook = openpyxl.load_workbook(workbook_path)
-    
-    # Select the worksheet
     worksheet = workbook[sheet_name]
     
     # Get the index of the starting column
@@ -202,17 +196,15 @@ def write_weeks_as_headers(workbook_path, sheet_name, source_column_letter, star
     week_ranges = date_utils.week_ranges_in_range(start_date, end_date)
 
     for (week_number, (week_start, week_end)) in week_ranges:
-        # Caculate the week_start column index
         week_start_column_letter = date_to_column_letter(source_column_letter, start_date, week_start)
-        # Caculate the week_end column index
         week_end_column_letter = date_to_column_letter(source_column_letter, start_date, week_end)
 
         # Merge a range of cells to form a month
         merge_range = f"{week_start_column_letter}{EXCEL_WEEKNUMBER_ROW}:{week_end_column_letter}{EXCEL_WEEKNUMBER_ROW}"
         worksheet.merge_cells(merge_range)
-        # Get the merged cell
-        merged_cell = worksheet[f"{week_start_column_letter}{EXCEL_WEEKNUMBER_ROW}"]
+        
         # Set the month as string in the merged cells
+        merged_cell = worksheet[f"{week_start_column_letter}{EXCEL_WEEKNUMBER_ROW}"]
         merged_cell.value = f"Week {week_number}"
 
     # Save the updated Excel workbook
@@ -220,35 +212,27 @@ def write_weeks_as_headers(workbook_path, sheet_name, source_column_letter, star
 
 
 def apply_conditional_formatting(workbook_path, sheet_name, range_to_format):
-    # Load the Excel workbook
     workbook = openpyxl.load_workbook(workbook_path)
-
-    # Select the worksheet
     worksheet = workbook[sheet_name]
 
-    # Green fill
-    green_fill = PatternFill(start_color="00FF00", end_color="00FF00", fill_type="solid")
-    dark_green_fill = PatternFill(start_color="006400", end_color="006400", fill_type="solid")
-    yellow_fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")
-    purple_fill = PatternFill(start_color="CC99FF", end_color="CC99FF", fill_type="solid")
-    himmel_farg_fill = PatternFill(start_color="00CCFF", end_color="00CCFF", fill_type="solid")
+    vaccation_rule = CellIsRule(operator='equal', formula=['"v"'], 
+                                stopIfTrue=True, fill=colors.color_of_vaccation())
+    approved_vaccation_rule = CellIsRule(operator='equal', formula=['"a"'], 
+                                         stopIfTrue=True, fill=colors.color_of_approved_vaccation())
+    other_rule = CellIsRule(operator='equal', formula=['"o"'], 
+                            stopIfTrue=True, fill=colors.color_of_others())
+    parental_rule = CellIsRule(operator='equal', formula=['"p"'], 
+                               stopIfTrue=True, fill=colors.color_of_parental_leave())
+    education_rule = CellIsRule(operator='equal', formula=['"e"'], 
+                                stopIfTrue=True, fill=colors.color_of_education())
 
-
-    # Define the rule: Fill cell with green if cell value is equal to "v"
-    vaccation_rule = CellIsRule(operator='equal', formula=['"v"'], stopIfTrue=True, fill=green_fill)
-    approved_vaccation_rule = CellIsRule(operator='equal', formula=['"a"'], stopIfTrue=True, fill=dark_green_fill)
-    other_rule = CellIsRule(operator='equal', formula=['"o"'], stopIfTrue=True, fill=yellow_fill)
-    parental_rule = CellIsRule(operator='equal', formula=['"p"'], stopIfTrue=True, fill=purple_fill)
-    education_rule = CellIsRule(operator='equal', formula=['"e"'], stopIfTrue=True, fill=himmel_farg_fill)
-
-    # Add the rule to the worksheet
+    # Add the rules
     worksheet.conditional_formatting.add(range_to_format, vaccation_rule)
     worksheet.conditional_formatting.add(range_to_format, approved_vaccation_rule)
     worksheet.conditional_formatting.add(range_to_format, other_rule)
     worksheet.conditional_formatting.add(range_to_format, parental_rule)
     worksheet.conditional_formatting.add(range_to_format, education_rule)
 
-    # Save the updated Excel workbook
     workbook.save(workbook_path)
 
 
@@ -283,8 +267,6 @@ def create_vaccation_period(source_wb, destination_wb, sheet_name, start_date, e
     # Protect the sheet with a password
     worksheet.protection.sheet = True
     worksheet.protection.password = PASSWORD
-
-    
     workbook.save(destination_wb)
 
 def main():

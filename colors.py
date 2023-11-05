@@ -19,3 +19,31 @@ MONTHS_COLORS = [
 def color_of_month(date_in_month):
     month = date_in_month.month
     return MONTHS_COLORS[month -1]
+
+def color_of_weekend():
+    # Grey fill
+    return PatternFill(start_color="808080", end_color="808080", fill_type="solid")
+
+def color_of_holiday():
+    # Red fill
+    return PatternFill(start_color="FFFF0000", end_color="FFFF0000", fill_type="solid")
+
+def color_of_vaccation():
+   # Green fill
+    return PatternFill(start_color="00FF00", end_color="00FF00", fill_type="solid")
+
+def color_of_approved_vaccation():
+    # Dark green fill
+    return PatternFill(start_color="006400", end_color="006400", fill_type="solid")
+
+def color_of_others():
+    # Yellow fill
+    return PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")
+
+def color_of_parental_leave():
+    # Purple fill
+    return PatternFill(start_color="CC99FF", end_color="CC99FF", fill_type="solid")
+
+def color_of_education():
+    #himmel_farg_fill
+    return PatternFill(start_color="00CCFF", end_color="00CCFF", fill_type="solid")
