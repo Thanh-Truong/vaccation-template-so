@@ -24,7 +24,7 @@ EXCEL_LAST_EMPLOYEE_ROW = 123
 
 ################### User preferences ###################
 CUSTOM_PASSWORD = '12345'
-CUSTOM_YEAR = 2024
+CUSTOM_YEAR = 2025
 #########################################################
 
 def date_to_column_letter(start_column_letter, start_date, a_date):
@@ -289,7 +289,7 @@ def create_vaccation_period(source_wb, destination_wb, sheet_name, start_date, e
 
 def main():
     source_wb='vaccation-template.xlsx'
-    destination_wb='2024-vaccation.xlsx'
+    destination_wb=f'{CUSTOM_YEAR}-vaccation.xlsx'
     create_vaccation_period(source_wb=source_wb, destination_wb=destination_wb, sheet_name="January-April",
                              start_date=date(CUSTOM_YEAR,1,1), end_date=date(CUSTOM_YEAR,4,30))
     create_vaccation_period(source_wb=destination_wb, destination_wb=destination_wb, sheet_name="May-August",
@@ -307,41 +307,6 @@ def main():
     
 
     workbook.save(destination_wb)
-
-def create_textbox_and_connector(wb, ws):
-  """Creates a textbox and a connector in the specified worksheet.
-
-  Args:
-    wb: The Excel workbook object.
-    ws: The worksheet object.
-  """
-
-  # Create a new Shape object for the textbox.
-  textbox = openpyxl.drawing.shapes.Shape()
-
-  # Set the textbox's position and size.
-  textbox.left = 10
-  textbox.top = 10
-  textbox.width = 100
-  textbox.height = 20
-
-  # Add text to the textbox.
-  textbox.text = "This is a textbox."
-
-  # Create a new Shape object for the connector.
-  connector = openpyxl.drawing.shapes.Shape()
-
-  # Set the connector's start and end points.
-  connector.start = textbox.upperLeftCorner
-  connector.end = (textbox.left + textbox.width, textbox.top + textbox.height)
-
-  # Set the connector's style.
-  connector.lineStyle = openpyxl.styles.LineFormat()
-  connector.lineStyle.color = openpyxl.styles.Color(rgb="FF0000")
-  connector.lineStyle.width = 1
-
-  # Add the connector to the textbox.
-  textbox.add_shape(connector)
 
 if __name__ == "__main__":
     main()
