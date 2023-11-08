@@ -3,9 +3,7 @@
 ````
 $ python3 -m venv env
 $ source env/bin/activate
-$ pip install --upgrade pip build twine
+$ pip install -r requirements.txt
 
 ````
 # Parameters in main.py
-CUSTOM_PASSWORD = '12345'
-CUSTOM_YEAR = 2024# vaccation-template-so

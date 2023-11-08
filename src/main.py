@@ -6,10 +6,10 @@ from openpyxl.comments import Comment
 from openpyxl.drawing.image import Image
 
 from copy import copy
-import date_utils
-import colors
+import src.date_utils as date_utils
+import src.colors as colors
 from datetime import date
-import red_days
+import src.red_days as red_days
 
 ################### DO NOT CHANGE!!! ##################
 EXCEL_MONTH_ROW = 2
@@ -336,29 +336,3 @@ def list_png_files(dir):
     
 if __name__ == "__main__":
     main()
-    """ list_png_files("images")
-
-    wb_path=f'{CUSTOM_YEAR}-vaccation.xlsx'
-    from openpyxl.drawing.image import Image
-    workbook = openpyxl.open(wb_path)
-    sheet = workbook["January-April"]
-
-    col_idx = 5
-    len_before = len(sheet._images)
-    count = 0
-    for image_name in list_png_files("images"):
-        image = Image(f"images/{image_name}")
-        width = image.width
-        height = image.height
-        letter = get_column_letter(col_idx)
-        sheet.add_image(image, f"{letter}1")
-        image = sheet._images[len_before + count]
-
-        # Justera storleken på bilden om så önskas
-        image.width = int(width / 3)
-        image.height = int(height / 3)
-        count += 1
-        col_idx += 5
-
-    # Spara arbetsboken till en fil
-    workbook.save("exempel.xlsx") """
