@@ -23,8 +23,9 @@ EXCEL_LAST_EMPLOYEE_ROW = 123
 ######################################################
 
 ################### User preferences ###################
-CUSTOM_PASSWORD = '12345'
+global custom_password
 global custom_year
+global custom_months
 #########################################################
 
 def date_to_column_letter(start_column_letter, start_date, a_date):
@@ -300,7 +301,7 @@ def create_vaccation_period(source_wb, destination_wb, sheet_name, start_date, e
     worksheet = workbook[sheet_name]
     # Protect the sheet with a password
     worksheet.protection.sheet = True
-    worksheet.protection.password = CUSTOM_PASSWORD
+    worksheet.protection.password = custom_password
     # Move up
     workbook.move_sheet(worksheet, -2)
     worksheet["B1"].value = f"Vaccation list {custom_year}"
@@ -337,9 +338,16 @@ def list_png_files(dir):
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("custom_year", type=int, help="Year")
+parser.add_argument("year", type=int, help="Year")
+parser.add_argument("--password", type=str, default='12345', help="Password. Default is 12345 ")
+parser.add_argument("--months", type=str, default='[1-4, 5-8, 9-12 ]', 
+                    help="How a year is split into periods. \
+                          The default is [1-4, 5-8, 9-12 ] which means the vacation list has 3 sheets: \
+                            January-April, May-August, and September-Decemnber")
 
 if __name__ == "__main__":
     args = parser.parse_args()
-    custom_year = args.custom_year
+    custom_year = args.year
+    custom_password = args.password
+    custom_months = args.months
     main()

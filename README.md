@@ -41,10 +41,27 @@ $ pip install -r requirements.txt
 ````
 ## Run
 
-Generate vacation list for 2025 by
+Generate vacation list for 2025
 
 ````
 $ python main 2025
 
 ````
-The `2024-vacationlist.xlsx` will be outputed under `output` folder.
+The `2025-vacationlist.xlsx` will be outputed under `output` folder.
+
+To lock all uninvited areas by a password, for example `Yhlm=1`. It is optional to specify password as the default password is `12345`
+
+````
+$ python main 2025 --password Yhlm=1
+
+````
+
+By default the vacation list is created with 3 sheets:
+January-April, May-August, and September-Decemnber
+To change this behaviour, please specify `--months` parameter. 
+For example to create only 2 sheets (January-June and July-December)
+
+````
+$ python main 2025 --password Yhlm=1 --months [1-6, 7-12 ]
+
+````
