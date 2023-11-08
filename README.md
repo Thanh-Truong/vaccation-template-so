@@ -8,4 +8,4 @@ $ pip install --upgrade pip build twine
 ````
 # Parameters in main.py
 CUSTOM_PASSWORD = '12345'
-CUSTOM_YEAR = 2024
+CUSTOM_YEAR = 2024# vaccation-template-so
