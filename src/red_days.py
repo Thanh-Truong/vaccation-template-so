@@ -1,6 +1,6 @@
 from datetime import date
 import requests
-import date_utils
+import date_utils as date_utils
 import json
 from openpyxl.drawing.image import Image
 
@@ -10,11 +10,11 @@ def cache_calendar(year):
     response = requests.get(url)
     data = response.json()
 
-    with open(f"calendar/{year}.json", "w", encoding="utf-8") as json_file:
+    with open(f"../calendar/{year}.json", "w", encoding="utf-8") as json_file:
         json.dump(data, json_file, ensure_ascii=False)
 
 def load_calendar(year):
-    file_path = f"calendar/{year}.json"
+    file_path = f"../calendar/{year}.json"
     try:
         with open(file_path, "r", encoding="utf-8") as json_file:
             return json.load(json_file)      

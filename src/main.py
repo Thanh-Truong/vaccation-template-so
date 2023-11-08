@@ -6,10 +6,10 @@ from openpyxl.comments import Comment
 from openpyxl.drawing.image import Image
 
 from copy import copy
-import src.date_utils as date_utils
-import src.colors as colors
+import date_utils as date_utils
+import colors as colors
 from datetime import date
-import src.red_days as red_days
+import red_days as red_days
 
 ################### DO NOT CHANGE!!! ##################
 EXCEL_MONTH_ROW = 2
@@ -128,7 +128,7 @@ def colourize_cells_to_last_employees(worksheet, start_column_index,
             cell.protection = openpyxl.styles.protection.Protection(locked=True)
 
     if image_name:
-        image = Image(f"images/{image_name}")
+        image = Image(f"../images/{image_name}")
         width = image.width
         height = image.height
         letter = get_column_letter(start_column_index + day_diff)
@@ -307,8 +307,8 @@ def create_vaccation_period(source_wb, destination_wb, sheet_name, start_date, e
     workbook.save(destination_wb)
 
 def main():
-    source_wb='vaccation-template.xlsx'
-    destination_wb=f'{CUSTOM_YEAR}-vaccation.xlsx'
+    source_wb='../templates/vaccation-template.xlsx'
+    destination_wb=f'../output/{CUSTOM_YEAR}-vaccation.xlsx'
     create_vaccation_period(source_wb=source_wb, destination_wb=destination_wb, sheet_name="January-April",
                              start_date=date(CUSTOM_YEAR,1,1), end_date=date(CUSTOM_YEAR,4,30))
     create_vaccation_period(source_wb=destination_wb, destination_wb=destination_wb, sheet_name="May-August",
@@ -336,3 +336,4 @@ def list_png_files(dir):
     
 if __name__ == "__main__":
     main()
+
