@@ -4,6 +4,7 @@ from openpyxl.styles import PatternFill
 from openpyxl.formatting.rule import CellIsRule
 from openpyxl.comments import Comment
 from openpyxl.drawing.image import Image
+import argparse
 
 from copy import copy
 import date_utils as date_utils
@@ -23,7 +24,7 @@ EXCEL_LAST_EMPLOYEE_ROW = 123
 
 ################### User preferences ###################
 CUSTOM_PASSWORD = '12345'
-CUSTOM_YEAR = 2024
+global custom_year
 #########################################################
 
 def date_to_column_letter(start_column_letter, start_date, a_date):
@@ -149,8 +150,8 @@ def colourize_and_lock_weekend(workbook_path, sheet_name, source_column_letter, 
     # Get the index of the starting column
     start_column_index = openpyxl.utils.column_index_from_string(source_column_letter)
 
-    heldagar = red_days.get_heldagar_as_dates(CUSTOM_YEAR)
-    kortdagar = red_days.get_kortagar_as_dates(CUSTOM_YEAR)
+    heldagar = red_days.get_heldagar_as_dates(custom_year)
+    kortdagar = red_days.get_kortagar_as_dates(custom_year)
 
     for date_diff in range(0, date_count):
         current_date = date_utils.date_add(input_date_obj=start_date, days=date_diff)
@@ -302,19 +303,19 @@ def create_vaccation_period(source_wb, destination_wb, sheet_name, start_date, e
     worksheet.protection.password = CUSTOM_PASSWORD
     # Move up
     workbook.move_sheet(worksheet, -2)
-    worksheet["B1"].value = f"Vaccation list {CUSTOM_YEAR}"
+    worksheet["B1"].value = f"Vaccation list {custom_year}"
     worksheet["B3"].value = f"{sheet_name}"
     workbook.save(destination_wb)
 
 def main():
     source_wb='../templates/vaccation-template.xlsx'
-    destination_wb=f'../output/{CUSTOM_YEAR}-vaccation.xlsx'
+    destination_wb=f'../output/{custom_year}-vaccation.xlsx'
     create_vaccation_period(source_wb=source_wb, destination_wb=destination_wb, sheet_name="January-April",
-                             start_date=date(CUSTOM_YEAR,1,1), end_date=date(CUSTOM_YEAR,4,30))
+                             start_date=date(custom_year,1,1), end_date=date(custom_year,4,30))
     create_vaccation_period(source_wb=destination_wb, destination_wb=destination_wb, sheet_name="May-August",
-                             start_date=date(CUSTOM_YEAR,5,1), end_date=date(CUSTOM_YEAR,8,31))
+                             start_date=date(custom_year,5,1), end_date=date(custom_year,8,31))
     create_vaccation_period(source_wb=destination_wb, destination_wb=destination_wb, sheet_name="September-December",
-                             start_date=date(CUSTOM_YEAR,9,1), end_date=date(CUSTOM_YEAR,12,31))
+                             start_date=date(custom_year,9,1), end_date=date(custom_year,12,31))
     
     # Remove the template-sheet
     workbook = openpyxl.load_workbook(destination_wb)
@@ -333,7 +334,12 @@ def list_png_files(dir):
     png_files = [file for file in files if file.endswith(".png")]
     png_files.sort()
     return png_files
-    
-if __name__ == "__main__":
-    main()
 
+
+parser = argparse.ArgumentParser()
+parser.add_argument("custom_year", type=int, help="Year")
+
+if __name__ == "__main__":
+    args = parser.parse_args()
+    custom_year = args.custom_year
+    main()

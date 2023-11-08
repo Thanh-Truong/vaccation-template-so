@@ -41,15 +41,10 @@ $ pip install -r requirements.txt
 ````
 ## Run
 
-Generate vacation list for 2024 by
+Generate vacation list for 2025 by
 
 ````
-$ python main(2024)
+$ python main 2025
 
 ````
 The `2024-vacationlist.xlsx` will be outputed under `output` folder.
-
-Test 
-```red 
-this is red
-``````
