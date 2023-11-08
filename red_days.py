@@ -2,6 +2,7 @@ from datetime import date
 import requests
 import date_utils
 import json
+from openpyxl.drawing.image import Image
 
 def cache_calendar(year):
     # Save the dictionary to a JSON file
@@ -128,14 +129,37 @@ def get_kortdag_name(date_obj, kortdagar_with_names):
             return _
     return None
 
-if __name__ == "__main__":
-    #for year in range(2024, 2028):
-    #    cache_calendar(year)
+def list_all_images(dir, file_name=None):
+    import os
+    files = os.listdir(dir)
+    file_name_png = file_name + ".png" if file_name else None
+    png_files = [file for file in files if file.endswith(".png")]
+    png_files = [file for file in png_files if ((file.lower() == file_name_png.lower()) 
+                      or (not file_name_png))]
     
-    for day, descr in get_heldagar_exclusive_sundays(2024):
-        print(f"{day} - {descr}")
-    print("----------------------")
-    for day, descr in get_kortagar_as_dates(2024):
-        print(f"{day} - {descr}")
-        print(f"")
+    png_files.sort()
+    return png_files
 
+HELDAGAR_AND_KORTDAGAR = ['Nyårsdagen', 'Trettondagsafton', 'Trettondedag jul', 'Skärtorsdagen',
+  'Långfredagen', 'Påskdagen', 'Annandag påsk', 'Valborgsmässoafton',
+    'Första Maj', 'dagen före Kristi himmelsfärdsdag', 'Kristi himmelsfärdsdag',
+      'Pingstdagen', 'Sveriges nationaldag', 'Midsommardagen', 'Allhelgonaafton',
+        'Alla helgons dag', 'Juldagen', 'Annandag jul']
+
+def get_heldag_image(heldag_name):
+    file_name = list_all_images("images", heldag_name)
+    if file_name:
+        return  Image(f"images/{file_name}")
+
+def get_image_path(day_description):
+    return f"{HELDAGAR_AND_KORTDAGAR.index(day_description)}.png"
+
+if __name__ == "__main__":
+    heldagar = get_heldagar_as_dates(2024)
+    kortdagar = get_kortagar_as_dates(2024)
+    heldagar_kortdagar = heldagar + kortdagar
+    heldagar_kortdagar.sort(key=lambda x: x[0])
+
+    for day, descr in heldagar_kortdagar:
+        image_name = f"{HELDAGAR_AND_KORTDAGAR.index(descr)}.png"
+        print(f"{day} - {descr} {image_name}")

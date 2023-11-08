@@ -1,10 +1,9 @@
 import openpyxl
 from openpyxl.utils import get_column_letter
 from openpyxl.styles import PatternFill
-from openpyxl.styles import Color
 from openpyxl.formatting.rule import CellIsRule
 from openpyxl.comments import Comment
-from openpyxl.worksheet.datavalidation import DataValidation
+from openpyxl.drawing.image import Image
 
 from copy import copy
 import date_utils
@@ -24,7 +23,7 @@ EXCEL_LAST_EMPLOYEE_ROW = 123
 
 ################### User preferences ###################
 CUSTOM_PASSWORD = '12345'
-CUSTOM_YEAR = 2025
+CUSTOM_YEAR = 2024
 #########################################################
 
 def date_to_column_letter(start_column_letter, start_date, a_date):
@@ -114,7 +113,8 @@ def insert_columns_with_format(workbook_path, sheet_name, source_column_letter, 
     workbook.save(workbook_path)
 
 def colourize_cells_to_last_employees(worksheet, start_column_index, 
-                                      day_diff, color_fill, locked, comment):
+                                      day_diff, color_fill, locked, 
+                                      comment, image_name):
     for row in range(EXCEL_DATE_ROW, EXCEL_LAST_EMPLOYEE_ROW + 1):
         cell = worksheet.cell(row=row, column=start_column_index + day_diff)
         cell.fill = color_fill
@@ -126,6 +126,18 @@ def colourize_cells_to_last_employees(worksheet, start_column_index,
             cell.protection = openpyxl.styles.protection.Protection(locked=locked)
         else:
             cell.protection = openpyxl.styles.protection.Protection(locked=True)
+
+    if image_name:
+        image = Image(f"images/{image_name}")
+        width = image.width
+        height = image.height
+        letter = get_column_letter(start_column_index + day_diff)
+        worksheet.add_image(image, f"{letter}1")
+        image = worksheet._images[len(worksheet._images) - 1]
+
+        # Justera storleken på bilden om så önskas
+        image.width = int(width / 3)
+        image.height = int(height / 3)
 
 def colourize_and_lock_weekend(workbook_path, sheet_name, source_column_letter, start_date, date_count):
     # Load the Excel workbook
@@ -150,16 +162,23 @@ def colourize_and_lock_weekend(workbook_path, sheet_name, source_column_letter, 
         
         heldag_name = red_days.get_heldag_name(current_date, heldagar)
         kortdag_name = red_days.get_kortdag_name(current_date, kortdagar)
+        
         comment = None
+        image_name = None
         if heldag_name:
             color_fill = colors.color_of_heldag()
             locked = True
             comment = Comment(heldag_name, None)
+            image_name = red_days.get_image_path(heldag_name)
+
         if kortdag_name:
             color_fill = colors.color_of_kortdag()
             comment = Comment(kortdag_name, None)
+            image_name = red_days.get_image_path(kortdag_name)
+
         colourize_cells_to_last_employees(worksheet, start_column_index, 
-                                          date_diff, color_fill, locked, comment)
+                                          date_diff, color_fill, locked,
+                                            comment, image_name)
 
     # Save the updated Excel workbook
     workbook.save(workbook_path)
@@ -308,5 +327,38 @@ def main():
 
     workbook.save(destination_wb)
 
+def list_png_files(dir):
+    import os
+    files = os.listdir(dir)
+    png_files = [file for file in files if file.endswith(".png")]
+    png_files.sort()
+    return png_files
+    
 if __name__ == "__main__":
     main()
+    """ list_png_files("images")
+
+    wb_path=f'{CUSTOM_YEAR}-vaccation.xlsx'
+    from openpyxl.drawing.image import Image
+    workbook = openpyxl.open(wb_path)
+    sheet = workbook["January-April"]
+
+    col_idx = 5
+    len_before = len(sheet._images)
+    count = 0
+    for image_name in list_png_files("images"):
+        image = Image(f"images/{image_name}")
+        width = image.width
+        height = image.height
+        letter = get_column_letter(col_idx)
+        sheet.add_image(image, f"{letter}1")
+        image = sheet._images[len_before + count]
+
+        # Justera storleken på bilden om så önskas
+        image.width = int(width / 3)
+        image.height = int(height / 3)
+        count += 1
+        col_idx += 5
+
+    # Spara arbetsboken till en fil
+    workbook.save("exempel.xlsx") """
