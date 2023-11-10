@@ -9,8 +9,8 @@ import argparse
 from copy import copy
 import date_utils as date_utils
 import colors as colors
-from datetime import date
 import red_days as red_days
+import utils
 
 ################### DO NOT CHANGE!!! ##################
 EXCEL_MONTH_ROW = 2
@@ -129,7 +129,7 @@ def colourize_cells_to_last_employees(worksheet, start_column_index,
             cell.protection = openpyxl.styles.protection.Protection(locked=True)
 
     if image_name:
-        image = Image(f"../images/{image_name}")
+        image = Image(f"images/{image_name}")
         width = image.width
         height = image.height
         letter = get_column_letter(start_column_index + day_diff)
@@ -308,11 +308,15 @@ def create_vaccation_period(source_wb, destination_wb, sheet_name, start_date, e
     workbook.save(destination_wb)
 
 def main(custom_periods):
-    source_wb='../templates/vaccation-template.xlsx'
-    destination_wb=f'../output/{custom_year}-vaccation.xlsx'
-    for start, end in custom_periods:
-        create_vaccation_period(source_wb=source_wb, destination_wb=destination_wb, sheet_name="January-April",
-                                start_date=date(custom_year,1,1), end_date=date(custom_year,4,30))
+    source_wb='templates/vaccation-template.xlsx'
+    destination_wb=f'output/{custom_year}-vaccation.xlsx'
+    for start_month, end_month in custom_periods:
+        create_vaccation_period(source_wb=source_wb, 
+                                destination_wb=destination_wb, 
+                                sheet_name=
+                                f"{date_utils.MONTHS_OF_A_YEAR[start_month - 1]}-{date_utils.MONTHS_OF_A_YEAR[end_month - 1]}",
+                                start_date=date_utils.first_day_of_month(custom_year, start_month),
+                                  end_date=date_utils.last_day_of_month(custom_year, end_month))
         
     # Remove the template-sheet
     workbook = openpyxl.load_workbook(destination_wb)
@@ -324,24 +328,6 @@ def main(custom_periods):
     
 
     workbook.save(destination_wb)
-
-def list_png_files(dir):
-    import os
-    files = os.listdir(dir)
-    png_files = [file for file in files if file.endswith(".png")]
-    png_files.sort()
-    return png_files
-
-
-def parse_input_periods(custom_periods):
-    import re
-    # Extract substrings matching the pattern 
-    # digit-space*-space*hyphen-space*\d+
-    months_per_sheet = re.findall(r'\d+\s*-\s*\d+', custom_periods)
-
-    # Split, then strip(), then make integers
-    return  [tuple(map(int, map(str.strip, 
-                        period.split('-')))) for period in months_per_sheet]
 
 parser = argparse.ArgumentParser()
 parser.add_argument("year", type=int, help="Year")
@@ -358,6 +344,6 @@ if __name__ == "__main__":
     input_periods = args.periods
     print(f"{custom_year} {custom_password} {input_periods}")
     
-    main(custom_periods=parse_input_periods(input_periods))
+    main(custom_periods=utils.parse_input_periods(input_periods))
     
 
