@@ -157,6 +157,15 @@ def week_ranges_in_range(start_date, end_date):
 
     return week_ranges
 
+def first_day_of_month(year, month):
+    return datetime(year, month, 1)
+
+def last_day_of_month(year, month):
+    first_day_of_next_month = datetime(year, month, 1) + timedelta(days=32)
+    # Subtract one day to get the last day of the current month
+    last_day_of_month = first_day_of_next_month - timedelta(days=first_day_of_next_month.day)
+    return last_day_of_month
+
 if __name__ == "__main__":
     # Example usage:
     start_date = date(2024, 1, 1)
@@ -168,3 +177,4 @@ if __name__ == "__main__":
     week_numbers = week_ranges_in_range(start_date, end_date)
     for (week_number, (start, end)) in week_numbers:
         print(f"{start} {end}")
+    print(last_day_of_month(2022, 12))

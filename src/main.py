@@ -25,7 +25,6 @@ EXCEL_LAST_EMPLOYEE_ROW = 123
 ################### User preferences ###################
 global custom_password
 global custom_year
-global custom_months
 #########################################################
 
 def date_to_column_letter(start_column_letter, start_date, a_date):
@@ -308,16 +307,13 @@ def create_vaccation_period(source_wb, destination_wb, sheet_name, start_date, e
     worksheet["B3"].value = f"{sheet_name}"
     workbook.save(destination_wb)
 
-def main():
+def main(custom_periods):
     source_wb='../templates/vaccation-template.xlsx'
     destination_wb=f'../output/{custom_year}-vaccation.xlsx'
-    create_vaccation_period(source_wb=source_wb, destination_wb=destination_wb, sheet_name="January-April",
-                             start_date=date(custom_year,1,1), end_date=date(custom_year,4,30))
-    create_vaccation_period(source_wb=destination_wb, destination_wb=destination_wb, sheet_name="May-August",
-                             start_date=date(custom_year,5,1), end_date=date(custom_year,8,31))
-    create_vaccation_period(source_wb=destination_wb, destination_wb=destination_wb, sheet_name="September-December",
-                             start_date=date(custom_year,9,1), end_date=date(custom_year,12,31))
-    
+    for start, end in custom_periods:
+        create_vaccation_period(source_wb=source_wb, destination_wb=destination_wb, sheet_name="January-April",
+                                start_date=date(custom_year,1,1), end_date=date(custom_year,4,30))
+        
     # Remove the template-sheet
     workbook = openpyxl.load_workbook(destination_wb)
     template_sheet = workbook["Template-sheet"]
@@ -337,10 +333,20 @@ def list_png_files(dir):
     return png_files
 
 
+def parse_input_periods(custom_periods):
+    import re
+    # Extract substrings matching the pattern 
+    # digit-space*-space*hyphen-space*\d+
+    months_per_sheet = re.findall(r'\d+\s*-\s*\d+', custom_periods)
+
+    # Split, then strip(), then make integers
+    return  [tuple(map(int, map(str.strip, 
+                        period.split('-')))) for period in months_per_sheet]
+
 parser = argparse.ArgumentParser()
 parser.add_argument("year", type=int, help="Year")
 parser.add_argument("--password", type=str, default='12345', help="Password. Default is 12345 ")
-parser.add_argument("--months", type=str, default='[1-4, 5-8, 9-12 ]', 
+parser.add_argument("--periods", type=str, default='[1- 4,5 -8, 9 - 12]', 
                     help="How a year is split into periods. \
                           The default is [1-4, 5-8, 9-12 ] which means the vacation list has 3 sheets: \
                             January-April, May-August, and September-Decemnber")
@@ -349,5 +355,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
     custom_year = args.year
     custom_password = args.password
-    custom_months = args.months
-    main()
+    input_periods = args.periods
+    print(f"{custom_year} {custom_password} {input_periods}")
+    
+    main(custom_periods=parse_input_periods(input_periods))
+    
+
