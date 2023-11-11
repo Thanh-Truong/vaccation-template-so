@@ -1,6 +1,5 @@
 
-from datetime import datetime, timedelta
-from datetime import date
+from datetime import datetime, date, timedelta
 
 MONTHS_OF_A_YEAR = [
     "January",
@@ -84,7 +83,7 @@ def end_of_month(year, month):
 
     return last_day_of_month
 
-from datetime import date, timedelta
+
 
 def add_months(sourcedate, months):
     # Calculate the new date by adding the specified number of months
@@ -165,16 +164,3 @@ def last_day_of_month(year, month):
     # Subtract one day to get the last day of the current month
     last_day_of_month = first_day_of_next_month - timedelta(days=first_day_of_next_month.day)
     return last_day_of_month.date()
-
-if __name__ == "__main__":
-    # Example usage:
-    start_date = date(2024, 1, 1)
-    
-    end_date = date(2024, 1, 10)
-    #result = generate_monthly_ranges_within_year(start_date, end_date)
-    #print(result)
-
-    week_numbers = week_ranges_in_range(start_date, end_date)
-    for (week_number, (start, end)) in week_numbers:
-        print(f"{start} {end}")
-    print(last_day_of_month(2022, 12))

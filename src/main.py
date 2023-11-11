@@ -20,6 +20,9 @@ EXCEL_WEEK_DATE_ROW = 5
 
 EXCEL_FIRST_EMPLOYEE_ROW = 6
 EXCEL_LAST_EMPLOYEE_ROW = 123
+EXCEL_SOURCE_SHEET = 'Template-sheet'
+EXCEL_FIRST_VACATION_COLUMN_LETTER = 'E'
+
 ######################################################
 
 ################### User preferences ###################
@@ -27,39 +30,25 @@ global custom_password
 global custom_year
 #########################################################
 
-def date_to_column_letter(start_column_letter, start_date, a_date):
-    diff = date_utils.count_dates_between_inclusive(start_date, a_date)
-    column_index = openpyxl.utils.column_index_from_string(start_column_letter) + diff -1
+def calculate_column_letter(start_column_letter, start_date, date_value):
+    date_count = date_utils.count_dates_between_inclusive(start_date, date_value)
+    column_index = openpyxl.utils.column_index_from_string(start_column_letter) + date_count -1
     return get_column_letter(column_index)
 
-# source_wb, 
-# destination_wb, 
-# new_sheet_name
-def clone_a_sheet(source_wb, destination_wb, new_sheet_name):
-    # Load the Excel workbook
+
+def clone_sheet(source_wb, destination_wb, source_sheet_name, new_sheet_name):
     workbook = openpyxl.load_workbook(source_wb)
-
-    # Select the sheet you want to clone
-    source_sheet = workbook['Template-sheet']
-
-    # Create a new sheet to clone into
+    source_sheet = workbook[source_sheet_name]
     new_sheet = workbook.copy_worksheet(source_sheet)
-    new_sheet.title = new_sheet_name  # Set a new name for the cloned sheet
-
-    # Save the updated Excel workbook
+    new_sheet.title = new_sheet_name
     workbook.save(destination_wb)
 
-def set_start_date(workbook_path, sheet_name, start_column_letter, start_date):
-    # Load the Excel workbook
+
+def set_start_date_of_period(workbook_path, sheet_name, start_date):
     wb = openpyxl.load_workbook(workbook_path)
-
-    # Select the sheet
     ws = wb[sheet_name]
-
-    # Create a new sheet to clone into
-    ws[f'{start_column_letter}{EXCEL_DATE_ROW}'].value = start_date
-
-    # Save the updated Excel workbook
+    ws[f'{EXCEL_FIRST_VACATION_COLUMN_LETTER}{EXCEL_DATE_ROW}'].value = start_date
+    ws[f'{EXCEL_FIRST_VACATION_COLUMN_LETTER}{EXCEL_WEEK_DATE_ROW}'].value = date_utils.get_weekday_short_text(start_date)
     wb.save(workbook_path)
 
 
@@ -71,7 +60,6 @@ def copy_date_formulas(destination_column, destination_column_letter, source_col
     destination_column[EXCEL_DATE_ROW - 1].value = date_utils.date_add(source_column[EXCEL_DATE_ROW - 1].value, days=date_diff)
     destination_column[EXCEL_WEEK_DATE_ROW -1].value = date_utils.get_weekday_short_text(destination_column[EXCEL_DATE_ROW - 1].value)
     
-
 
 def copy_format_column(worksheet, source_column_letter, destination_column_letter, date_diff):
     source_column = worksheet[source_column_letter]
@@ -93,22 +81,19 @@ def copy_format_column(worksheet, source_column_letter, destination_column_lette
     copy_date_formulas(destination_column, destination_column_letter, 
                        source_column, source_column_letter, date_diff)
 
-def insert_columns_with_format(workbook_path, sheet_name, source_column_letter, date_count):
-    # Load the Excel workbook
+def insert_columns_with_format(workbook_path, sheet_name, date_count):
     workbook = openpyxl.load_workbook(workbook_path)
-    
-    # Select the worksheet
     worksheet = workbook[sheet_name]
     
     # Get the index of the starting column
-    start_column_index = openpyxl.utils.column_index_from_string(source_column_letter)
+    start_column_index = openpyxl.utils.column_index_from_string(EXCEL_FIRST_VACATION_COLUMN_LETTER)
     
     # Insert column_count to the right 
     worksheet.insert_cols(idx=start_column_index + 1, amount=date_count)
 
     for date_diff in range(1, date_count):
         destination_column_letter = get_column_letter(start_column_index + date_diff)
-        copy_format_column(worksheet, source_column_letter, destination_column_letter, date_diff)
+        copy_format_column(worksheet, EXCEL_FIRST_VACATION_COLUMN_LETTER, destination_column_letter, date_diff)
 
     # Save the updated Excel workbook
     workbook.save(workbook_path)
@@ -140,7 +125,7 @@ def colourize_cells_to_last_employees(worksheet, start_column_index,
         image.width = int(width / 3)
         image.height = int(height / 3)
 
-def colourize_and_lock_weekend(workbook_path, sheet_name, source_column_letter, start_date, date_count):
+def colourize_and_lock_weekend(workbook_path, sheet_name, start_date, date_count):
     # Load the Excel workbook
     workbook = openpyxl.load_workbook(workbook_path)
     
@@ -148,7 +133,7 @@ def colourize_and_lock_weekend(workbook_path, sheet_name, source_column_letter, 
     worksheet = workbook[sheet_name]
     
     # Get the index of the starting column
-    start_column_index = openpyxl.utils.column_index_from_string(source_column_letter)
+    start_column_index = openpyxl.utils.column_index_from_string(EXCEL_FIRST_VACATION_COLUMN_LETTER)
 
     heldagar = red_days.get_heldagar_as_dates(custom_year)
     kortdagar = red_days.get_kortagar_as_dates(custom_year)
@@ -184,7 +169,7 @@ def colourize_and_lock_weekend(workbook_path, sheet_name, source_column_letter, 
     # Save the updated Excel workbook
     workbook.save(workbook_path)
 
-def write_months_as_headers(workbook_path, sheet_name, source_column_letter, start_date, end_date):
+def write_months_as_headers(workbook_path, sheet_name, start_date, end_date):
     # Load the Excel workbook
     workbook = openpyxl.load_workbook(workbook_path)
     
@@ -192,22 +177,19 @@ def write_months_as_headers(workbook_path, sheet_name, source_column_letter, sta
     worksheet = workbook[sheet_name]
     
     # Get the index of the starting column
-    start_column_index = openpyxl.utils.column_index_from_string(source_column_letter)
+    start_column_index = openpyxl.utils.column_index_from_string(EXCEL_FIRST_VACATION_COLUMN_LETTER)
     monthly_ranges = date_utils.generate_monthly_ranges_within_year(start_date, end_date)    
     month = 0
     for (month_start, month_end) in monthly_ranges:
         if month_start and month_end:
             # Caculate the month_start column index
-            month_start_column_letter = date_to_column_letter(source_column_letter, start_date, month_start)
+            month_start_column_letter = calculate_column_letter(EXCEL_FIRST_VACATION_COLUMN_LETTER, start_date, month_start)
 
             # Caculate the month_end column index
-            month_end_column_letter = date_to_column_letter(source_column_letter, start_date, month_end)
+            month_end_column_letter = calculate_column_letter(EXCEL_FIRST_VACATION_COLUMN_LETTER, start_date, month_end)
 
             # Merge a range of cells to form a month
             merge_range = f"{month_start_column_letter}{EXCEL_MONTH_ROW}:{month_end_column_letter}{EXCEL_MONTH_ROW}"
-            #print("merge_range start {} end {}".format(month_start, month_end))
-            #print("merge_range start column {} end column {}".format(month_start_column_letter, month_end_column_letter))
-            #print(merge_range)
             worksheet.merge_cells(merge_range)
             # Get the merged cell
             merged_cell = worksheet[f"{month_start_column_letter}{EXCEL_MONTH_ROW}"]
@@ -232,8 +214,8 @@ def write_weeks_as_headers(workbook_path, sheet_name, source_column_letter, star
     week_ranges = date_utils.week_ranges_in_range(start_date, end_date)
 
     for (week_number, (week_start, week_end)) in week_ranges:
-        week_start_column_letter = date_to_column_letter(source_column_letter, start_date, week_start)
-        week_end_column_letter = date_to_column_letter(source_column_letter, start_date, week_end)
+        week_start_column_letter = calculate_column_letter(source_column_letter, start_date, week_start)
+        week_end_column_letter = calculate_column_letter(source_column_letter, start_date, week_end)
 
         # Merge a range of cells to form a month
         merge_range = f"{week_start_column_letter}{EXCEL_WEEKNUMBER_ROW}:{week_end_column_letter}{EXCEL_WEEKNUMBER_ROW}"
@@ -273,28 +255,24 @@ def apply_conditional_formatting(workbook_path, sheet_name, range_to_format):
 
 
 def create_vaccation_period(source_wb, destination_wb, sheet_name, start_date, end_date):
-    start_column_letter = 'E'
-
-    # Clone the Template-sheet to a new sheet 
-    clone_a_sheet(source_wb, destination_wb, sheet_name)
+    clone_sheet(source_wb, destination_wb, EXCEL_SOURCE_SHEET, sheet_name)
     # On the new workbook, let set the start_date at E4 
-    set_start_date(destination_wb, sheet_name, start_column_letter, start_date)
+    set_start_date_of_period(destination_wb, sheet_name, start_date)
 
     date_count = date_utils.count_dates_between_inclusive(start_date, end_date)
-    #print(f"There are {date_count} inclusive dates between {start_date} and {end_date}.")
 
     # Insert columns to the right with the same format as start_column_letter
-    insert_columns_with_format(destination_wb, sheet_name, start_column_letter, date_count)
-    colourize_and_lock_weekend(destination_wb, sheet_name, start_column_letter, start_date, date_count)
-    write_months_as_headers(destination_wb,sheet_name, start_column_letter,start_date,end_date)
-    write_weeks_as_headers(destination_wb,sheet_name, start_column_letter,start_date,end_date)
+    insert_columns_with_format(destination_wb, sheet_name, date_count)
+    colourize_and_lock_weekend(destination_wb, sheet_name, start_date, date_count)
+    write_months_as_headers(destination_wb,sheet_name,start_date,end_date)
+    write_weeks_as_headers(destination_wb,sheet_name,start_date,end_date)
     
     # Caculate range_format
-    end_column_index = openpyxl.utils.column_index_from_string(start_column_letter) + date_count -1
+    end_column_index = openpyxl.utils.column_index_from_string(EXCEL_FIRST_VACATION_COLUMN_LETTER) + date_count -1
     end_column_letter = get_column_letter(end_column_index)
 
     apply_conditional_formatting(destination_wb, sheet_name, 
-                                 f'{start_column_letter}{EXCEL_FIRST_EMPLOYEE_ROW}:{end_column_letter}{EXCEL_LAST_EMPLOYEE_ROW}')
+                                 f'{EXCEL_FIRST_VACATION_COLUMN_LETTER}{EXCEL_FIRST_EMPLOYEE_ROW}:{end_column_letter}{EXCEL_LAST_EMPLOYEE_ROW}')
 
     workbook = openpyxl.load_workbook(destination_wb)
     worksheet = workbook[sheet_name]
@@ -307,20 +285,25 @@ def create_vaccation_period(source_wb, destination_wb, sheet_name, start_date, e
     worksheet["B3"].value = f"{sheet_name}"
     workbook.save(destination_wb)
 
+def add_vacation_as_new_sheet(source_wb, destination_wb, start_month, end_month):
+    start_date = date_utils.first_day_of_month(custom_year, start_month)
+    end_date=date_utils.last_day_of_month(custom_year, end_month)
+    create_vaccation_period(source_wb=source_wb, 
+                                destination_wb=destination_wb, 
+                                sheet_name=
+                                f"{date_utils.text_of_month(start_date)}-{date_utils.text_of_month(end_date)}",
+                                start_date=start_date, end_date=end_date)
 def main(custom_periods):
     source_wb='templates/vaccation-template.xlsx'
     destination_wb=f'output/{custom_year}-vaccation.xlsx'
+    
     for start_month, end_month in custom_periods:
-        create_vaccation_period(source_wb=source_wb, 
-                                destination_wb=destination_wb, 
-                                sheet_name=
-                                f"{date_utils.MONTHS_OF_A_YEAR[start_month - 1]}-{date_utils.MONTHS_OF_A_YEAR[end_month - 1]}",
-                                start_date=date_utils.first_day_of_month(custom_year, start_month),
-                                  end_date=date_utils.last_day_of_month(custom_year, end_month))
+        add_vacation_as_new_sheet(source_wb, destination_wb, start_month, end_month)
+        source_wb = destination_wb
         
     # Remove the template-sheet
     workbook = openpyxl.load_workbook(destination_wb)
-    template_sheet = workbook["Template-sheet"]
+    template_sheet = workbook[EXCEL_SOURCE_SHEET]
     workbook.remove(template_sheet)
     properties = workbook.properties
     properties.creator = "Thành Trương"  # Set your name as the author
