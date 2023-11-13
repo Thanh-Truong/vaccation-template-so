@@ -205,17 +205,17 @@ def write_months_as_headers(workbook_path, sheet_name, start_date, end_date):
     # Save the updated Excel workbook
     workbook.save(workbook_path)
 
-def write_weeks_as_headers(workbook_path, sheet_name, source_column_letter, start_date, end_date):
+def write_weeks_as_headers(workbook_path, sheet_name, start_date, end_date):
     workbook = openpyxl.load_workbook(workbook_path)
     worksheet = workbook[sheet_name]
     
     # Get the index of the starting column
-    start_column_index = openpyxl.utils.column_index_from_string(source_column_letter)
+    start_column_index = openpyxl.utils.column_index_from_string(EXCEL_FIRST_VACATION_COLUMN_LETTER)
     week_ranges = date_utils.week_ranges_in_range(start_date, end_date)
 
     for (week_number, (week_start, week_end)) in week_ranges:
-        week_start_column_letter = calculate_column_letter(source_column_letter, start_date, week_start)
-        week_end_column_letter = calculate_column_letter(source_column_letter, start_date, week_end)
+        week_start_column_letter = calculate_column_letter(EXCEL_FIRST_VACATION_COLUMN_LETTER, start_date, week_start)
+        week_end_column_letter = calculate_column_letter(EXCEL_FIRST_VACATION_COLUMN_LETTER, start_date, week_end)
 
         # Merge a range of cells to form a month
         merge_range = f"{week_start_column_letter}{EXCEL_WEEKNUMBER_ROW}:{week_end_column_letter}{EXCEL_WEEKNUMBER_ROW}"
