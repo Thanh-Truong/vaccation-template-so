@@ -30,9 +30,9 @@ global custom_password
 global custom_year
 #########################################################
 
-def calculate_column_letter(start_column_letter, start_date, date_value):
-    date_count = date_utils.count_dates_between_inclusive(start_date, date_value)
-    column_index = openpyxl.utils.column_index_from_string(start_column_letter) + date_count -1
+def calculate_column_letter(start_date, date_value):
+    date_count = date_utils.number_dates_in_period(start_date, date_value)
+    column_index = openpyxl.utils.column_index_from_string(EXCEL_FIRST_VACATION_COLUMN_LETTER) + date_count -1
     return get_column_letter(column_index)
 
 
@@ -52,18 +52,14 @@ def set_start_date_of_period(workbook_path, sheet_name, start_date):
     wb.save(workbook_path)
 
 
-def copy_date_formulas(destination_column, destination_column_letter, source_column, source_column_letter, date_diff):
-    # Copy formulas
-    destination_column[EXCEL_DATE_ROW - 1].value = "={}{}+{}".format(source_column_letter, EXCEL_DATE_ROW, date_diff)
-    destination_column[EXCEL_WEEK_DATE_ROW -1].value = '=TEXT({}{},"ddd")'.format(destination_column_letter, EXCEL_DATE_ROW)
-    # Above should work but here another way to asign values instead formulas
+def set_date_on_column(destination_column, source_column, date_diff):
     destination_column[EXCEL_DATE_ROW - 1].value = date_utils.date_add(source_column[EXCEL_DATE_ROW - 1].value, days=date_diff)
     destination_column[EXCEL_WEEK_DATE_ROW -1].value = date_utils.get_weekday_short_text(destination_column[EXCEL_DATE_ROW - 1].value)
     
 
-def copy_format_column(worksheet, source_column_letter, destination_column_letter, date_diff):
-    source_column = worksheet[source_column_letter]
-    destination_column = worksheet[destination_column_letter]
+def copy_format_column(ws, to_col_letter, date_diff):
+    source_column = ws[EXCEL_FIRST_VACATION_COLUMN_LETTER]
+    destination_column = ws[to_col_letter]
 
     # Copy the format from the source column to the newly inserted column
     for source_cell, new_cell in zip(source_column, destination_column):
@@ -75,25 +71,23 @@ def copy_format_column(worksheet, source_column_letter, destination_column_lette
         new_cell.protection = copy(source_cell.protection)
     
     # Set the width of the newly inserted column to match the starting column
-    worksheet.column_dimensions[destination_column_letter].width = worksheet.column_dimensions[source_column_letter].width
+    ws.column_dimensions[to_col_letter].width = ws.column_dimensions[EXCEL_FIRST_VACATION_COLUMN_LETTER].width
     
     # Copy date formulas to display "day" on row 4th and "weekday" on row 5th
-    copy_date_formulas(destination_column, destination_column_letter, 
-                       source_column, source_column_letter, date_diff)
+    set_date_on_column(destination_column, source_column, date_diff)
 
-def insert_columns_with_format(workbook_path, sheet_name, date_count):
+def fill_period_with_columns(workbook_path, sheet_name, date_count):
     workbook = openpyxl.load_workbook(workbook_path)
     worksheet = workbook[sheet_name]
     
-    # Get the index of the starting column
-    start_column_index = openpyxl.utils.column_index_from_string(EXCEL_FIRST_VACATION_COLUMN_LETTER)
+    from_col_idx = openpyxl.utils.column_index_from_string(EXCEL_FIRST_VACATION_COLUMN_LETTER)
     
-    # Insert column_count to the right 
-    worksheet.insert_cols(idx=start_column_index + 1, amount=date_count)
+    # Insert columns to the right
+    worksheet.insert_cols(idx=from_col_idx + 1, amount=date_count)
 
-    for date_diff in range(1, date_count):
-        destination_column_letter = get_column_letter(start_column_index + date_diff)
-        copy_format_column(worksheet, EXCEL_FIRST_VACATION_COLUMN_LETTER, destination_column_letter, date_diff)
+    for i in range(1, date_count):
+        to_col_letter = get_column_letter(from_col_idx + i)
+        copy_format_column(worksheet, to_col_letter, i)
 
     # Save the updated Excel workbook
     workbook.save(workbook_path)
@@ -169,60 +163,50 @@ def colourize_and_lock_weekend(workbook_path, sheet_name, start_date, date_count
     # Save the updated Excel workbook
     workbook.save(workbook_path)
 
-def write_months_as_headers(workbook_path, sheet_name, start_date, end_date):
-    # Load the Excel workbook
-    workbook = openpyxl.load_workbook(workbook_path)
-    
-    # Select the worksheet
-    worksheet = workbook[sheet_name]
+def fill_month_headers(workbook_path, sheet_name, start_date, end_date):
+    wb = openpyxl.load_workbook(workbook_path)
+    ws = wb[sheet_name]
     
     # Get the index of the starting column
-    start_column_index = openpyxl.utils.column_index_from_string(EXCEL_FIRST_VACATION_COLUMN_LETTER)
     monthly_ranges = date_utils.generate_monthly_ranges_within_year(start_date, end_date)    
     month = 0
     for (month_start, month_end) in monthly_ranges:
         if month_start and month_end:
-            # Caculate the month_start column index
-            month_start_column_letter = calculate_column_letter(EXCEL_FIRST_VACATION_COLUMN_LETTER, start_date, month_start)
-
-            # Caculate the month_end column index
-            month_end_column_letter = calculate_column_letter(EXCEL_FIRST_VACATION_COLUMN_LETTER, start_date, month_end)
-
-            # Merge a range of cells to form a month
-            merge_range = f"{month_start_column_letter}{EXCEL_MONTH_ROW}:{month_end_column_letter}{EXCEL_MONTH_ROW}"
-            worksheet.merge_cells(merge_range)
-            # Get the merged cell
-            merged_cell = worksheet[f"{month_start_column_letter}{EXCEL_MONTH_ROW}"]
+            month_start_column_letter = calculate_column_letter(start_date, month_start)
+            month_end_column_letter = calculate_column_letter(start_date, month_end)
+            start_cell_ref = f"{month_start_column_letter}{EXCEL_MONTH_ROW}"
+            end_cell_ref = f"{month_end_column_letter}{EXCEL_MONTH_ROW}"
+            merge_range = f"{start_cell_ref}:{end_cell_ref}"
+            ws.merge_cells(merge_range)
+            merged_cell = ws[f"{start_cell_ref}"]
             # Set the month as string in the merged cells
             merged_cell.value = date_utils.MONTHS_OF_A_YEAR[month]
+
             # Colourize the month
             color_to_fill = colors.MONTHS_COLORS[month]
-
             merged_cell.fill = color_to_fill
-
         month = month + 1
 
     # Save the updated Excel workbook
-    workbook.save(workbook_path)
+    wb.save(workbook_path)
 
-def write_weeks_as_headers(workbook_path, sheet_name, start_date, end_date):
+def fill_week_headers(workbook_path, sheet_name, start_date, end_date):
     workbook = openpyxl.load_workbook(workbook_path)
     worksheet = workbook[sheet_name]
     
-    # Get the index of the starting column
-    start_column_index = openpyxl.utils.column_index_from_string(EXCEL_FIRST_VACATION_COLUMN_LETTER)
     week_ranges = date_utils.week_ranges_in_range(start_date, end_date)
 
     for (week_number, (week_start, week_end)) in week_ranges:
-        week_start_column_letter = calculate_column_letter(EXCEL_FIRST_VACATION_COLUMN_LETTER, start_date, week_start)
-        week_end_column_letter = calculate_column_letter(EXCEL_FIRST_VACATION_COLUMN_LETTER, start_date, week_end)
+        # Find cells to merge aka making a week
+        week_start_column_letter = calculate_column_letter(start_date, week_start)
+        week_end_column_letter = calculate_column_letter(start_date, week_end)
+        start_cell_ref = f"{week_start_column_letter}{EXCEL_WEEKNUMBER_ROW}"
+        end_cell_ref = f"{week_end_column_letter}{EXCEL_WEEKNUMBER_ROW}"
 
-        # Merge a range of cells to form a month
-        merge_range = f"{week_start_column_letter}{EXCEL_WEEKNUMBER_ROW}:{week_end_column_letter}{EXCEL_WEEKNUMBER_ROW}"
-        worksheet.merge_cells(merge_range)
+        worksheet.merge_cells(f"{start_cell_ref}:{end_cell_ref}")
         
-        # Set the month as string in the merged cells
-        merged_cell = worksheet[f"{week_start_column_letter}{EXCEL_WEEKNUMBER_ROW}"]
+        # Set week number
+        merged_cell = worksheet[start_cell_ref]
         merged_cell.value = f"Week {week_number}"
 
     # Save the updated Excel workbook
@@ -256,17 +240,16 @@ def apply_conditional_formatting(workbook_path, sheet_name, range_to_format):
 
 def create_vaccation_period(source_wb, destination_wb, sheet_name, start_date, end_date):
     clone_sheet(source_wb, destination_wb, EXCEL_SOURCE_SHEET, sheet_name)
-    # On the new workbook, let set the start_date at E4 
     set_start_date_of_period(destination_wb, sheet_name, start_date)
 
-    date_count = date_utils.count_dates_between_inclusive(start_date, end_date)
+    date_count = date_utils.number_dates_in_period(start_date, end_date)
 
     # Insert columns to the right with the same format as start_column_letter
-    insert_columns_with_format(destination_wb, sheet_name, date_count)
+    fill_period_with_columns(destination_wb, sheet_name, date_count)
     colourize_and_lock_weekend(destination_wb, sheet_name, start_date, date_count)
-    write_months_as_headers(destination_wb,sheet_name,start_date,end_date)
-    write_weeks_as_headers(destination_wb,sheet_name,start_date,end_date)
-    
+    fill_month_headers(destination_wb,sheet_name,start_date,end_date)
+    fill_week_headers(destination_wb,sheet_name,start_date,end_date)
+
     # Caculate range_format
     end_column_index = openpyxl.utils.column_index_from_string(EXCEL_FIRST_VACATION_COLUMN_LETTER) + date_count -1
     end_column_letter = get_column_letter(end_column_index)

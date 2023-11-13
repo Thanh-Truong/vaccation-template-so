@@ -31,7 +31,7 @@ def text_of_month(date_in_month):
     month = date_in_month.month
     return MONTHS_OF_A_YEAR[month -1]
 
-def count_dates_between_inclusive(start_date, end_date):
+def number_dates_in_period(start_date, end_date):
     # Calculate the number of days between the two dates
     days_between = (end_date - start_date).days
 
