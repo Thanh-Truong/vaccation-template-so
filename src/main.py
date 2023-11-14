@@ -261,9 +261,12 @@ def create_vaccation_period(source_wb, destination_wb, sheet_name, start_date, e
     worksheet = workbook[sheet_name]
     # Auto filter on B5:D5
     worksheet.auto_filter.ref = "B5:D5"
+    
     # Protect the sheet with a password
     worksheet.protection.sheet = True
     worksheet.protection.password = custom_password
+    worksheet.protection.autoFilter = False
+
     # Move up
     workbook.move_sheet(worksheet, -2)
     worksheet["B1"].value = f"Vaccation list {custom_year}"
