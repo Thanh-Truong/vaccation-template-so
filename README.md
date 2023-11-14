@@ -6,6 +6,10 @@ This code generates Excel based vacation list for employees at an organisation (
 
 The Sweden holiday calendar is used by default. There is currently no support to change to other countries but please make a feature request if needed.
 
+The main challenge is that we need to have a reliable source of holidays for different countries. There is universal Python package or API that can provide trusted and verified list of holidays for a country.
+
+Even in the limitation to Sweden, this tool was desgined to cache 10 years of Swedish holidays (2023-2033) due to the uncertainty if the used API is up and free at any given time. Of course, cached holidays will come in handy not only for this tool but some others. And there is no intension that the tool will survive that long.
+
 ## How to use vacation list
 By default, a vacation list has 3 tabs in which a tab is correponding to 4 months period.
 (This can be configured in later version)

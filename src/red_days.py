@@ -155,6 +155,8 @@ def get_image_path(day_description):
     return f"{HELDAGAR_AND_KORTDAGAR.index(day_description)}.png"
 
 if __name__ == "__main__":
+    for year in range(2029, 2034):
+        cache_calendar(year)
     heldagar = get_heldagar_as_dates(2024)
     kortdagar = get_kortagar_as_dates(2024)
     heldagar_kortdagar = heldagar + kortdagar
