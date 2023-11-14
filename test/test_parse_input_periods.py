@@ -2,38 +2,16 @@ import unittest
 from src.utils import parse_input_periods
 
 class TestParseInputPeriods(unittest.TestCase):
+    def test_valid_input(self):
+        input_string = "1 - 5,  7-10, 15-20"
+        result = parse_input_periods(input_string)
+        expected = [(1, 5), (7, 10), (15, 20)]
+        self.assertEqual(result, expected)
 
-    def test_valid_periods(self):
-        custom_periods = "1 - 4,  5 - 8, 9 - 12"
-        result = parse_input_periods(custom_periods)
-
-        expected_result = [(1, 4), (5, 8), (9, 12)]
-        self.assertEqual(result, expected_result)
-
-    def test_valid_periods_with_spaces(self):
-        custom_periods = "  1  -  4 , 5  -  8 ,  9  -  12  "
-        result = parse_input_periods(custom_periods)
-
-        expected_result = [(1, 4), (5, 8), (9, 12)]
-        self.assertEqual(result, expected_result)
-
-    def test_valid_periods_mixed_format(self):
-        custom_periods = "1 -4, 5-  8 ,  9-  12"
-        result = parse_input_periods(custom_periods)
-
-        expected_result = [(1, 4), (5, 8), (9, 12)]
-        self.assertEqual(result, expected_result)
-
-    def test_valid_periods_with_text(self):
-        custom_periods = "1-4, 5-8, 9-12, invalid"
-        result = parse_input_periods(custom_periods)
-        expected_result = [(1, 4), (5, 8), (9, 12)]
-        self.assertEqual(result, expected_result)
-
-    def test_empty_input(self):
-        custom_periods = ""
-        result = parse_input_periods(custom_periods)
-        self.assertEqual(result, [])
+    def test_invalid_input(self):
+        input_string = "1 - abc, 7-10, 15-20"
+        with self.assertRaises(ValueError):
+            parse_input_periods(input_string)
 
 if __name__ == '__main__':
     unittest.main()

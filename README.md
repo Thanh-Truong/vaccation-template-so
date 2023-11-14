@@ -63,20 +63,20 @@ To change this behaviour, please specify `--periods` parameter.
 For example to create 3 sheets: January-April, May - August and July-December
 
 ````
-$ python main 2025 --password Yhlm=1 --periods [1-4, 5-8, 9-12 ]
+$ python main 2025 --password Yhlm=1 --periods 1-4, 5-8, 9-12
 
 ````
 
 And to create only 2 sheets (January-June and July-December)
 
 ````
-$ python main 2025 --password Yhlm=1 --periods [1-6, 7-12 ]
+$ python main 2025 --password Yhlm=1 --periods 1-6, 7-12
 
 ````
 
 And to create 12 sheets for 12 months
 
 ````
-$ python main 2025 --password Yhlm=1 --periods [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 ]
+$ python main 2025 --password Yhlm=1 --periods 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 
 
 ````

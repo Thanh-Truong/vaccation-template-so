@@ -270,13 +270,16 @@ def create_vaccation_period(source_wb, destination_wb, sheet_name, start_date, e
     worksheet["B3"].value = f"{sheet_name}"
     workbook.save(destination_wb)
 
+def make_sheet_name(start_date, end_date):
+    return f"{date_utils.text_of_month(start_date)}-{date_utils.text_of_month(end_date)}"  \
+            if start_date.month != end_date.month else f"{date_utils.text_of_month(start_date)}"
+
 def add_vacation_as_new_sheet(source_wb, destination_wb, start_month, end_month):
     start_date = date_utils.first_day_of_month(custom_year, start_month)
     end_date=date_utils.last_day_of_month(custom_year, end_month)
     create_vaccation_period(source_wb=source_wb, 
                                 destination_wb=destination_wb, 
-                                sheet_name=
-                                f"{date_utils.text_of_month(start_date)}-{date_utils.text_of_month(end_date)}",
+                                sheet_name= make_sheet_name(start_date, end_date),
                                 start_date=start_date, end_date=end_date)
 def main(custom_periods):
     source_wb='templates/vaccation-template.xlsx'
@@ -300,9 +303,9 @@ def main(custom_periods):
 parser = argparse.ArgumentParser()
 parser.add_argument("year", type=int, help="Year")
 parser.add_argument("--password", type=str, default='12345', help="Password. Default is 12345 ")
-parser.add_argument("--periods", type=str, default='[1- 4,5 -8, 9 - 12]', 
+parser.add_argument("--periods", type=str, default='1- 4,5 -8, 9 - 12', 
                     help="How a year is split into periods. \
-                          The default is [1-4, 5-8, 9-12 ] which means the vacation list has 3 sheets: \
+                          The default is 1-4, 5-8, 9-12  which means the vacation list has 3 sheets: \
                             January-April, May-August, and September-Decemnber")
 
 if __name__ == "__main__":
